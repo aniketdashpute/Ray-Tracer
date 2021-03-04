@@ -1,7 +1,3 @@
-//3456789_123456789_123456789_123456789_123456789_123456789_123456789_123456789
-// (JT: why the numbers? counts columns, helps me keep 80-char-wide listings,
-//  lets me see EXACTLY what the editor's 'line-wrap' feature will do.)
-
 //===  TraceSupplement.js  ===================================================
 // The object prototypes below (and their comments) are suitable for any and 
 // all features described in the Ray-Tracing Project Assignment Sheet.
@@ -195,6 +191,8 @@ function CCamera() {
     // horizontal and vertical; camera gazes along the -N axis): 
     // Default settings: put camera eye-point at world-space origin, and
     this.eyePt = vec4.fromValues(0,0,0,1);
+    //this.eyePt = gui.camEyePt;
+    vec4.copy(this.eyePt, gui.camEyePt);
 
     // LOOK STRAIGHT DOWN:
     this.uAxis = vec4.fromValues(1,0,0,0);	// camera U axis == world x axis			
@@ -202,18 +200,11 @@ function CCamera() {
     this.nAxis = vec4.fromValues(0,0,1,0);	// camera N axis == world z axis.
             // (and thus we're gazing down the -Z axis with default camera). 
 
-    // LOOK AT THE HORIZON:
 
-    //   var camView = mat4.create();
-    //   mat4.lookAt(camView, gui.camEyePt, gui.camAimPt, gui.camUpVec);
     var camEyePt = vec3.fromValues(gui.camEyePt[0], gui.camEyePt[1], gui.camEyePt[2]);
     var camAimPt = vec3.fromValues(gui.camAimPt[0], gui.camAimPt[1], gui.camAimPt[2]);
     var camUpVec = vec3.fromValues(gui.camUpVec[0], gui.camUpVec[1], gui.camUpVec[2]);
     this.raylookAt(camEyePt, camAimPt, camUpVec);
-
-    //   this.uAxis = vec4.fromValues(1,1,0,0);	// camera U axis == world x axis			
-    //   this.vAxis = vec4.fromValues(0,0,1,0);	// camera V axis == world z axis
-    //   this.nAxis = vec4.fromValues(0,-1,0,0);	// camera N axis == world -y axis.
 
 
     // b) -- Camera 'intrinsic' parameters that set the camera's optics and images.
@@ -237,8 +228,8 @@ function CCamera() {
 // (These should match the CImgBuf object 'g_myPic' object's xSiz, ySiz members.
 	this.xmax = g_myPic.xSiz;			// horizontal,
 	this.ymax = g_myPic.ySiz;			// vertical image resolution.
-// To ray-trace an image of xmax,ymax pixels, divide this rectangular image 
-// plane into xmax,ymax rectangular tiles, and shoot eye-rays from the camera's
+// To ray-trace an image of (xmax,ymax) pixels, divide this rectangular image 
+// plane into (xmax,ymax) rectangular tiles, and shoot eye-rays from the camera's
 // center-of-projection through those tiles to find scene color values.  
 // --For the simplest, fastest image (without antialiasing), trace each eye-ray 
 // through the CENTER of each tile to find pixel colors.  
@@ -366,16 +357,31 @@ CCamera.prototype.setEyeRay = function(myeRay, xpos, ypos)
     //     bilinear filter, Mitchell-Netravali piecewise bicubic prefilter, etc).
 
     // Convert image-plane location (xpos,ypos) in the camera's U,V,N coords:
-    var posU = this.iLeft + xpos*this.ufrac; 	// U coord,
-    var posV = this.iBot  + ypos*this.vfrac;	// V coord,
+
+    // limit the values to image range
+    var xfrac = xpos*this.ufrac;
+    xfrac = Math.min(this.xmax, xfrac);
+    xfrac = Math.max(0, xfrac);
+
+    var yfrac = ypos*this.vfrac;
+    yfrac = Math.min(this.ymax, yfrac);
+    yfrac = Math.max(0, yfrac);
+
+    var posU = this.iLeft + xfrac; 	// U coord,
+    var posV = this.iBot  + yfrac;	// V coord,
     //  and the N coord is always -1, at the image-plane (zNear) position.
     // Then convert this point location to world-space X,Y,Z coords using our 
     // camera's unit-length coordinate axes uAxis,vAxis,nAxis
-    xyzPos = vec4.create();    // make vector 0,0,0,0.	
-    vec4.scaleAndAdd(xyzPos, xyzPos, this.uAxis, posU); // xyzPos += Uaxis*posU;
-    vec4.scaleAndAdd(xyzPos, xyzPos, this.vAxis, posV); // xyzPos += Vaxis*posU;
-    vec4.scaleAndAdd(xyzPos, xyzPos, this.nAxis, -this.iNear); 
+
+    // make vector 0,0,0,0.
+    xyzPos = vec4.create();
+    // xyzPos += Uaxis*posU;	
+    vec4.scaleAndAdd(xyzPos, xyzPos, this.uAxis, posU);
+    // xyzPos += Vaxis*posU;
+    vec4.scaleAndAdd(xyzPos, xyzPos, this.vAxis, posV);
     // xyzPos += Naxis * (-1)
+    vec4.scaleAndAdd(xyzPos, xyzPos, this.nAxis, -this.iNear); 
+
     // The eyeRay we want consists of just 2 world-space values:
     //  	-- the ray origin == camera origin == eyePt in XYZ coords
     //		-- the ray direction TO image-plane point FROM ray origin;
@@ -528,6 +534,11 @@ function CImgBuf(wide, tall) {
 	this.pixSiz = 3;							// pixel size (3 for RGB, 4 for RGBA, etc)
 	this.iBuf = new Uint8Array(  this.xSiz * this.ySiz * this.pixSiz);	
 	this.fBuf = new Float32Array(this.xSiz * this.ySiz * this.pixSiz);
+
+    // Super sampling - mention number of super samples for each pixel
+    // only initialized here
+    this.xSuperSiz = 1;
+    this.ySuperSiz = 1;
 }
 
 CImgBuf.prototype.setTestPattern = function(pattNum) {
@@ -662,16 +673,36 @@ CImgBuf.prototype.makeRayTracedImage = function()
 	var idx = 0;  // CImgBuf array index(i,j) == (j*this.xSiz + i)*this.pixSiz
     var i,j;      // pixel x,y coordinate (origin at lower left; integer values)
 
+    this.xSuperSiz = g_AAcode;
+    this.ySuperSiz = g_AAcode;
+    this.bJitter = g_isJitter;
+    console.log("xSuperSize: %d", this.xSuperSiz);
+
     // for the j-th row of pixels.
     for(j=0; j< this.ySiz; j++)
     {      
         // and the i-th pixel on that row,
         for(i=0; i< this.xSiz; i++)
         {
+            var sumColr = vec4.fromValues(0,0,0,1.0);
+            for (a=0;a<this.xSuperSiz;a++)
+            {
+                for (b=0;b<this.ySuperSiz;b++)
+                {
             // create ray for pixel (i,j)
-            myCam.setEyeRay(eyeRay,i,j);
+                    if (true == this.bJitter)
+                    {
+                        var xSamp = i+0.5+((a + Math.random()/2)/this.xSuperSiz);
+                        var ySamp = j+0.5+((b + Math.random()/2)/this.ySuperSiz);
+                        myCam.setEyeRay(eyeRay,xSamp,ySamp);
+                    }
+                    else
+                    {
+                        myCam.setEyeRay(eyeRay,i+0.5+a/this.xSuperSiz,j+0.5+b/this.ySuperSiz);
+                    }
 
-			hit = myGrid.traceGrid(eyeRay);						// trace ray to the grid
+                    // trace ray to the grid
+                    hit = myGrid.traceGrid(eyeRay);
 			if (hit==0)
             {
                 vec4.copy(colr, myGrid.gapColor);
@@ -684,11 +715,15 @@ CImgBuf.prototype.makeRayTracedImage = function()
             {
                 vec4.copy(colr, myGrid.skyColor);
 			}
+                    vec4.add(sumColr, sumColr, colr);
+                }
+            }
             // Array index at pixel (i,j)
             idx = (j*this.xSiz + i)*this.pixSiz;
-            this.fBuf[idx   ] = colr[0];	
-            this.fBuf[idx +1] = colr[1];
-            this.fBuf[idx +2] = colr[2];
+            vec4.scale(sumColr, sumColr, 1/(this.xSuperSiz*this.ySuperSiz));
+            this.fBuf[idx   ] = sumColr[0];	
+            this.fBuf[idx +1] = sumColr[1];
+            this.fBuf[idx +2] = sumColr[2];            
 	  	}
   	}
     // create integer image from floating-point buffer.      
