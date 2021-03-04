@@ -684,12 +684,12 @@ CImgBuf.prototype.makeRayTracedImage = function()
         // and the i-th pixel on that row,
         for(i=0; i< this.xSiz; i++)
         {
+            // create ray(s) for pixel (i,j)
             var sumColr = vec4.fromValues(0,0,0,1.0);
             for (a=0;a<this.xSuperSiz;a++)
             {
                 for (b=0;b<this.ySuperSiz;b++)
                 {
-            // create ray for pixel (i,j)
                     if (true == this.bJitter)
                     {
                         var xSamp = i+0.5+((a + Math.random()/2)/this.xSuperSiz);
@@ -703,18 +703,18 @@ CImgBuf.prototype.makeRayTracedImage = function()
 
                     // trace ray to the grid
                     hit = myGrid.traceGrid(eyeRay);
-			if (hit==0)
-            {
-                vec4.copy(colr, myGrid.gapColor);
-			}
-			else if (hit==1)
-            {
-                vec4.copy(colr, myGrid.lineColor);
-			}
-			else
-            {
-                vec4.copy(colr, myGrid.skyColor);
-			}
+                    if (hit==0)
+                    {
+                        vec4.copy(colr, myGrid.gapColor);
+                    }
+                    else if (hit==1)
+                    {
+                        vec4.copy(colr, myGrid.lineColor);
+                    }
+                    else
+                    {
+                        vec4.copy(colr, myGrid.skyColor);
+                    }
                     vec4.add(sumColr, sumColr, colr);
                 }
             }
