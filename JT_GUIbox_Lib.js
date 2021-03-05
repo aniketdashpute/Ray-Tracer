@@ -46,14 +46,16 @@ USAGE:
 // Written for EECS 351-2,	Intermediate Computer Graphics,
 //				Northwestern Univ. EECS Dept., Jack Tumblin
 // 2018.05.20 Created, integrated into 'Week01' starter code for ray-tracing
-// 2019.05.15 Updated comments & keyboard fcns; remove deprecated 'keyPress'
+// 2018.06.07 Added 'strafe_Up()' strafe_Dn() + 'orbiting' instructions.
+// 2019.05.20 Updated comments & keyboard fcns; remove deprecated 'keyPress'
+
 //==============================================================================
 //=============================================================================
 function GUIbox() {	
 //=============================================================================
 //==============================================================================
 // CONSTRUCTOR for one re-usable 'GUIbox' object that holds all data and fcns 
-// needed to capture and respond to all keyboard & mouse inputs/outputs.
+// needed to capture and respond to all user inputs/outputs.
 
   this.isDrag = false;	// mouse-drag: true while user holds down mouse button
   
@@ -90,14 +92,12 @@ GUIbox.prototype.init = function() {
 // --------!!! SURPRISE !!!-------------------------
 // Our earlier, naive way of setting mouse callback functions made calls to
 // isolated functions that were NOT members of an object or a prototype: 
-//      (e.g.     window.addEventListener("mousedown", myMouseDown);  
-//				  	called the stand-alone myMouseDown() function, usually
-//					defined somewhere below main())
-// That's the old, simple, obvious way, and it always works.
+//      (e.g.     window.addEventListener("mousedown", myMouseDown);  )
+// That's the old, simple, obvious way that works.
 // But if we assemble all our callback functions into a nice neat GUIbox object, 
 // and if the GUIbox init() function sets them as event-listeners like this:
 //                window.addEventListener("mousedown", this.mouseDown);
-// ----- .THEN SOMETHING WEIRD HAPPENS. -----
+// ----- .SOMETHING WEIRD HAPPENS. -----
 // Mouse-down events *DO* call our GUIbox's mouseDown() member function, but
 // inside mouseDown() we can't use 'this' to access any other GUIbox members;
 //      console.log('this.isDown', this.isDown); //  prints 'undefined'
@@ -109,15 +109,15 @@ GUIbox.prototype.init = function() {
 // HOW TO FIX IT:
 //  Read down thru the code just above 'Legacy Internet Explorer..." here:
 //   https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/addEventListener
-// I think the simplest solution is to use closures more cleverly:
-//  a) Within our 'init()' function, create a local object I will call 'that'. 
+// The simplest solution is to use closures more cleverly:
+//  a) Within our 'init()' function, create a local object 'that'. 
 //     The 'that' variable is just a simple reference to our GUIbox object.
 //  b) Create an anonymous (e.g. no-name) function to use as our callback; 
 //  c) within the 'anonymous' function, use the 'that' object to call the 
 //      desired (named) method we want to use as our callback.  Inside the named
 //      callback function (e.g. that.mouseDown() ), you will find that 'this'
 //      refers to the GUIbox object specified by 'that', and we now can access
-//      other GUIbox members we may need such as xCVV, etc.  Whew!
+//      other GUIbox members we may need such as xCVV, etc.
 //-----------------------------------MORE ON THIS TOPIC:
   // https://stackoverflow.com/questions/20279484/how-to-access-the-correct-this-inside-a-callback
   // TUTORIAL: http://javascriptissexy.com/understand-javascript-callback-functions-and-use-them/
@@ -137,8 +137,7 @@ GUIbox.prototype.init = function() {
         function(mev) {return that.mouseMove(mev);     } ); 
 	window.addEventListener("mouseup",   
 	      function(mev) {return that.mouseUp(mev);       } );	
-/*
-//------------------HINT: If you don't need them, comment out these Event Listeners:
+/* // UNUSED EVENT LISTENERS COMMENTED OUT
 	window.addEventListener("click",
 	      function(mev) {return that.mouseClick(mev);    } );			
 	window.addEventListener("dblclick",  
@@ -151,7 +150,6 @@ GUIbox.prototype.init = function() {
 	// listener to the 'g_canvasID' object instead of the 'window' object:
 	g_canvasID.addEventListener("click", 
 	      function(mev) {return that.canvasClick(mev);   } );
-//--------------------(END HINT)-----------
 */
 	// ?Arguments?
 	// Wait wait wait -- these 'listeners' just NAME the function called when 
@@ -169,15 +167,14 @@ GUIbox.prototype.init = function() {
   // Next, register all keyboard events found within our HTML webpage window:
 	window.addEventListener("keydown", 
 	      function(kev) {return that.keyDown(kev);  }, false);
-	// After each 'keydown' event, call the 'KeyDown()' function; 'false'
+	// After each 'keydown' event, call the 'GUIbox.keyDown()' function; 'false'
 	// (default) means event handler executed in  'bubbling', not 'capture')
 	// ( https://www.w3schools.com/jsref/met_document_addeventlistener.asp )
 	window.addEventListener("keyup", 
 	      function(kev) {return that.keyUp(kev);    }, false);
   // The 'keyDown' and 'keyUp' events respond to ALL keys on the keyboard,
   //      including shift,alt,ctrl,arrow, pgUp, pgDn,f1,f2...f12 etc. 
-	// NOTE: please don't use the 'keypress' event -- It's been deprecated!
-	//	see: https://developer.mozilla.org/en-US/docs/Web/API/Document/keypress_event
+
 	// END Mouse & Keyboard Event-Handlers----------------------------------------
 
 		// REPORT initial mouse-drag totals on-screen:
@@ -185,32 +182,33 @@ GUIbox.prototype.init = function() {
 			'Mouse Drag totals (CVV coords):\t' + 
 			this.xMdragTot.toFixed(5) + ', \t' + this.yMdragTot.toFixed(5);	
 
-	// Camera-Navigation:----------------------------------
-	// Initialize our camera aiming parameters using yaw-pitch sphere method.
-	// Camera aiming point stays on a unit-radius sphere centered at the camera's
-	// eye point, specified by:
-	// --'yaw' angle(longitude) increasing CCW in xy plane measured from +x axis;
-	//		HORIZONTAL mouse-drag changes yaw (aka 'aim direction' or 'compass heading')
-	// --'pitch' angle(latitude) increasing upwards above horizon.
-	//		VERTICAL mouse-drag changes pitch (aka 'camera's up/down tilt')
-	// This is BETTER than 'glass tube' because it lets us pitch camera up/down
-	// in equal-angle increments, and even go past +/-90 degrees if we wish.
-	//
-	// I limited 'pitch' to +/- 90 deg (+/- PI/2 radians) to avoid confusing
+  // Camera-Navigation:----------------------------------
+  // Initialize our camera aiming parameters using yaw-pitch sphere method.
+  // Camera aiming point stays on a unit-radius sphere centered at the camera's
+  // eye point, specified by:
+  // --'yaw' angle(longitude) increasing CCW in xy plane measured from +x axis;
+  // --'pitch' angle(latitude) increasing upwards above horizon.
+  // This is BETTER than 'glass tube' because it lets us pitch camera up/down
+  // in equal-angle increments, and even go past +/-90 degrees if we wish.
+  // I limited 'pitch' to +/- 90 deg (+/- PI/2 radians) to avoid confusing
 	// counter-intuitive images possible with past-vertical pitch.
-	// (see GUIbox.mouseMove() function )  
-
-	this.camYawInit = Math.PI/2.0;	// set INITIAL yaw (radians) as the +y direction;
-									// (used in GUIbox.mouseMove() fcn)
-	this.camYaw = this.camYawInit; 	// Use it to set current yaw angle.
-									// HORIZONTAL mouse-drag increases/decreates yaw.
-	this.camPitchInit = -Math.PI/2;	// define INITIAL pitch(radians) as -z direction;
-									// (used in GUIbox.mouseMove() fcn)
-	this.camPitch = this.camPitchInit;	// Use it to set current pitch angle.
-									// VERTICAL mouse-drag increases/decreases pitch.
-
-  this.camEyePt = vec4.fromValues(0,0,0,1); // initial camera position
-  this.camAimPt = vec3.fromValues(       // point on yaw-pitch sphere around eye:
+	// (see GUIbox.mouseMove() function )
+  this.camYaw = Math.PI/2.0;              // (initially I aim in +y direction)
+                              // Yaw angle (radians) measured from world +x 
+                              // direction to the x,y components of the camera's
+                              // aiming direction.
+                              // HORIZONTAL mouse-drag increases/decreases this.
+  this.camYawInit = this.camYaw;  // save initial value for use in mouseMove().
+//  this.camPitch = -Math.PI/2;             // (initially I look straight down)
+  this.camPitch = 0.0;        // Initially aim at horizon; level with xy plane 
+                              // Pitch angle (radians) measured upwards from the 
+                              // horizon (the xy plane at camera's eyepoint z)
+                              // upwards to the camera's aiming direction.
+                              // VERTICAL mouse-drag increases/decreases this.
+  this.camPitchInit = this.camPitch;  // save initial value for mouseMove().
+//  this.camEyePt = vec4.fromValues(0,0,0,1); // initial camera position: origin
+  this.camEyePt = vec4.fromValues(0,-8,2,1);  // initial camera position
+  this.camAimPt = vec4.fromValues(       // point on yaw-pitch sphere around eye:
                 this.camEyePt[0] + Math.cos(this.camYaw)*Math.cos(this.camPitch), // x
                 this.camEyePt[1] + Math.sin(this.camYaw)*Math.cos(this.camPitch), // y
                 this.camEyePt[2] + Math.sin(this.camPitch),  // z
@@ -223,6 +221,19 @@ GUIbox.prototype.init = function() {
                             Math.sin(this.camPitch + Math.PI/2),  // z
                             0.0);   // w=0 for vectors, =1 for points.
   this.camSpeed = 0.5;	      // world-space distance moved per keystroke
+
+  // Set initial Camera Lens (intrinsics)-----------------------  
+  // These values should match those used in our ray-tracer, set in the file
+  // JT_tracer0-Scene.js, in the function CScene.prototype.initScene().
+  
+  this.camFovy  = 45.0;   // vertical field-of-view in degrees, measured from
+                          // bottom to top of camera image.
+  this.camAspect = 1.0;   // camera-image width/height (sets horizontal FOV)
+  this.camNear = 1.0;     // distance from Center of Projection to viewing plane
+                          // (where we define left,bot,top values from Fovy & aspect)
+  this.camFar = 10000;    // distance to frustum's outermost clipping plane
+                          // (for WebGL camera only--ignored by ray-tracer)
+  // CScene.init() uses these settings to create its ray-camera.
 }
 
 GUIbox.prototype.mouseDown = function(mev) {
@@ -249,7 +260,7 @@ GUIbox.prototype.mouseDown = function(mev) {
 
 GUIbox.prototype.mouseMove = function(mev) {	
 //=============================================================================
-// Called when user MOVES the mouse, with or without a button  pressed down.
+// Called when user MOVES the mouse, with or without a button pressed down.
 // 									(Which button?   console.log('mev.button=' + mev.button); )
 // 	mev.clientX, mev.clientY == mouse pointer location, but measured in webpage 
 //	pixels: left-handed coords; UPPER left origin; Y increases DOWNWARDS (!)  
@@ -274,7 +285,10 @@ GUIbox.prototype.mouseMove = function(mev) {
 			              (this.camPitch*(180/Math.PI)).toFixed(3) + 'deg.';	
   //-------------------------
   // Camera navigation:
-  // update camera aiming angles:
+  // Use mouse-drag amounts (in CVV units) to update camera aiming angles:
+  this.camAim(this.xMdragTot, -this.yMdragTot); // why negative y drag? feels  
+                                                // good to drag down to look up
+/* OLD STUFF -- DELETE (moved to this.camAim()
   this.camYaw = this.camYawInit + this.xMdragTot * 1.0; // Horiz drag in radians
   this.camPitch = this.camPitchInit - this.yMdragTot * 1.0; // Vert drag in radians
   if(this.camYaw < -Math.PI) {  // keep yaw angle values between +/- PI
@@ -305,8 +319,9 @@ GUIbox.prototype.mouseMove = function(mev) {
   this.camUpVec[0] = Math.cos(this.camYaw)*Math.cos(this.camPitch + Math.PI/2); 
   this.camUpVec[1] = Math.sin(this.camYaw)*Math.cos(this.camPitch + Math.PI/2);
   this.camUpVec[2] = Math.sin(this.camPitch + Math.PI/2); 
-
+*/
   drawAll();		// we MOVED the camera -- re-draw everything!
+
 }
 
 GUIbox.prototype.mouseUp = function(mev) {
@@ -325,12 +340,10 @@ GUIbox.prototype.mouseUp = function(mev) {
 	this.yMdragTot += (this.yCVV - this.yMpos);
 	this.xMpos = this.xCVV;             // RECORD this latest mouse-position.
 	this.yMpos = this.yCVV;
-
-/*//----- DIAGNOSTIC:
+/*
 	console.log('GUIbox.MouseUp: xMdragTot,yMdragTot =', 
 	              this.xMdragTot.toFixed(5), ',\t', 
 	              this.yMdragTot.toFixed(5));
-//----- END DIAGNOSTIC.
 */
 	// display it on our webpage, too...
 	document.getElementById('MouseResult0').innerHTML = 
@@ -364,10 +377,6 @@ var yp = g_canvasID.height -(mev.clientY -rect.top);
 	            (g_canvasID.height/2);
 }
 /*
-//------------These next 3 functions:
-//				 	 mouseClick(), mouseDblClick(), canvasClick()
-//------------are here for completeness -- remove/comment-out if you don't need them.
-
 GUIbox.prototype.mouseClick = function(mev) {
 //==============================================================================
 // User made a single mouse-click in the client area of browser window.
@@ -380,12 +389,13 @@ GUIbox.prototype.mouseClick = function(mev) {
 
 // console.log("called GUIbox.mouseClick(mev).");
 
+
  // USEFUL TRICK: REPORT ALL FUNCTION ARGUMENTS
 	console.log("GUIbox.mouseClick()---------REPORT ALL ARGUMENTS!");
 	for(var i=0; i< arguments.length; i++) {// LIST all function-call arguments:
 		console.log('\targ[' + i + '] == ' + arguments[i]);
 	}
-	console.log("---------------------(end this.MouseClick() argument list)");
+	console.log("---------------------(end this.MouseClick() argument list)");		
 
 	// display contents of the 'mouseEvent' object passed as argument. See:
 	// https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent 
@@ -450,7 +460,7 @@ GUIbox.prototype.canvasClick = function(mev) {
 	document.getElementById('MouseCanvas').innerHTML = 
 	  'gui.canvasClick() at CVV coords xCVV,yCVV = ' + 
 	  gui.xCVV.toFixed(5) + ', ' + gui.yCVV.toFixed(5);
-//	console.log('gui.canvasClick(): xCVV,yCVV== ' + 
+///	console.log('gui.canvasClick(): xCVV,yCVV== ' + 
 //              gui.xCVV.toFixed(5) + ', ' + gui.yCVV.toFixed(5));
 
 }
@@ -465,6 +475,7 @@ GUIbox.prototype.canvasClick = function(mev) {
 GUIbox.prototype.keyDown = function(kev) {
 //============================================================================
 // Called when user presses down ANY key on the keyboard;
+
 //
 // For a light, easy explanation of keyboard events in JavaScript,
 // see:    http://www.kirupa.com/html5/keyboard_events_in_javascript.htm
@@ -489,16 +500,16 @@ GUIbox.prototype.keyDown = function(kev) {
         "   --kev.code:"+kev.code   +"      --kev.key:"+kev.key+
     "<br>--kev.ctrlKey:"+kev.ctrlKey+" --kev.shiftKey:"+kev.shiftKey+
     "<br> --kev.altKey:"+kev.altKey +"  --kev.metaKey:"+kev.metaKey;  
-
+			
   switch(kev.code) {
-    case "Digit0":
-			document.getElementById('KeyDown').innerHTML =  
-			'GUIbox.KeyDown() digit 0 key.(UNUSED)';          // print on webpage,
-			console.log("digit 0 key.(UNUSED)");              // print on console.
+    case "Digit0":	
+      document.getElementById('KeyDown').innerHTML =  
+      'GUIbox.KeyDown() digit 0 key.(UNUSED)';          // print on webpage,
+      console.log("digit 0 key.(UNUSED)");              // print on console.
       break;
-    case "Digit1":
-			document.getElementById('KeyDown').innerHTML =  
-			'guiBox.KeyDown() digit 1 key.(UNUSED)';         // print on webpage,
+    case "Digit1":		
+      document.getElementById('KeyDown').innerHTML =  
+			'guiBox.KeyDown() digit 1 key.(UNUSED)';          // print on webpage,
 			console.log("digit 1 key.(UNUSED)");              // print on console.
       break;
 		//------------------Ray Tracing---------------------- 
@@ -516,12 +527,12 @@ GUIbox.prototype.keyDown = function(kev) {
 		  document.getElementById('KeyDown').innerHTML =  
 		  'GUIbox.KeyDown() t/T key: TRACE a new image!';	    // print on webpage,
 	    console.log("t/T key: TRACE a new image!");         // print on console,
-      g_myPic.makeRayTracedImage(); // (near end of traceSupplement.js)			
+      g_myScene.makeRayTracedImage(); // (near end of traceSupplement.js)			
       rayView.switchToMe(); // be sure OUR VBO & shaders are in use, then
       rayView.reload();     // re-transfer VBO contents and texture-map contents
-      drawAll();
+      drawAll();			// redraw BOTH viewports onscreen.
       break;
-		//------------------WASD navigation-----------------
+		//------------------WASD QE navigation-----------------
 		case "KeyA":
 			document.getElementById('KeyDown').innerHTML =  
 			'GUIbox.KeyDown() a/A key. Strafe LEFT!';
@@ -546,6 +557,18 @@ GUIbox.prototype.keyDown = function(kev) {
 			console.log("w/W key: Move FWD!\n");
 			this.camFwd();
 			break;		
+    case "KeyQ":
+//      console.log("q/Q key: strafe DOWN!\n");
+      document.getElementById('KeyDown').innerHTML = 
+      'GUIbox.keyDown() q/Q key. Strafe DOWN!';
+      this.camStrafe_Dn();
+      break;
+    case "KeyE":
+//      console.log('e/E key: strafe UP!\n");
+      document.getElementById('KeyDown').innerHTML = 
+      'GUIbox.keyDown() e\E key. Strafe UP!';
+      this.camStrafe_Up();
+      break;
 		case "ArrowLeft": 	
   			document.getElementById('KeyDown').innerHTML =
   			'GUIbox.KeyDown() Arrow-Left,key='+kev.key;
@@ -572,6 +595,7 @@ GUIbox.prototype.keyDown = function(kev) {
   		console.log("UNUSED key:", kev.key);
       break;
   }
+
 }
 
 GUIbox.prototype.keyUp = function(kev) {
@@ -580,6 +604,46 @@ GUIbox.prototype.keyUp = function(kev) {
 // You probably don't want to use this ('this.keyDown()' explains why)...
 
 //	console.log('GUIbox.keyUp()--keyCode='+kev.keyCode+' released.');
+}
+
+GUIbox.prototype.camAim = function(xRad, yRad) {
+//==============================================================================
+// Change camera aiming direction by pitching 'xRad' radians above horizon (the
+// initial pitch amount), and yawing 'yRad' radians away from initial yaw amount.
+// (measured in counter-clockwise (CCW) radians in xy plane from +x axis)
+// NOTE this function gets called by 'GUIbox.mouseDrag()' and by keyDown().
+
+  this.camYaw = this.camYawInit + xRad;     // Horiz drag in radians
+  this.camPitch = this.camPitchInit + yRad; // Vert drag in radians
+  if(this.camYaw < -Math.PI) {  // keep yaw angle values between +/- PI
+    this.camYaw += 2*Math.PI;   
+    }
+  else if(this.camYaw > Math.PI) {
+    this.camYaw -= 2*Math.PI;
+    }
+  if(this.camPitch < -Math.PI/2) {    // ALSO, don't let pitch go below -90deg 
+    this.camPitch = -Math.PI/2;       // (-Z aiming direction)
+    // We want y-axis mouse-dragging to set camera pitch. When pitch reaches its
+    // lowermost limit of -PI/2, what's the mouse-drag value yMdragTot?
+    // camPitch = camPitchInit - yMdragTot == -PI/2; add yMdragTot to both sides:
+    //            camPitchInit == yMdragTot -PI/2;  then add PI/2 to both sides:
+    //            (camPitchInit + PI/2) == yMdragTot;  
+    // THUS ANY mouse-drag totals > than this amount will get ignored!
+    this.yMdragTot = this.camPitchInit + Math.PI/2; // upper limit on yMdragTot.
+    }
+  else if(this.camPitch > Math.PI/2) {  // AND never let pitch go above +90deg:
+    this.camPitch = Math.PI/2;          // (+Z aiming direction)
+    this.yMdragTot = this.camPitchInit -Math.PI/2; // lower limit on yMdragTot.
+    }
+  // update camera aim point using spherical coords:
+  this.camAimPt[0] = this.camEyePt[0] + Math.cos(this.camYaw)*Math.cos(this.camPitch);  // x
+  this.camAimPt[1] = this.camEyePt[1] + Math.sin(this.camYaw)*Math.cos(this.camPitch);  // y
+  this.camAimPt[2] = this.camEyePt[2] + Math.sin(this.camPitch); // z
+  // update the 'up' vector too (pitch up by an additional +90 degrees)
+  this.camUpVec[0] = Math.cos(this.camYaw)*Math.cos(this.camPitch + Math.PI/2); 
+  this.camUpVec[1] = Math.sin(this.camYaw)*Math.cos(this.camPitch + Math.PI/2);
+  this.camUpVec[2] = Math.sin(this.camPitch + Math.PI/2); 
+
 }
 
 GUIbox.prototype.camFwd = function() {
@@ -609,11 +673,29 @@ GUIbox.prototype.camRev = function() {
   drawAll();          // show new result on-screen.
 }
 
+// HOW TO 'ORBIT' AROUND a 3D object as you watch it:
+// Try this;  
+// 1) aim the camera at an interesting 3D object scene feature to center it in 
+//    your on-screen displays.
+// 2) 'strafe' left a little; the 3D object will slide rightwards on-screen.
+// 3) Re-aim the camera (yaw rightwards) to re-center the 3D object on-screen.
+// 4) repeat this strafe-left/aim-right combination over and over, and you will
+// find that your camera 'orbits' the object -- it moves in a horizontal circle 
+// around the the 3D object as you watch it, allowing you to examine it from all 
+// sides without any need to 'look away' to change viewpoints. The opposite
+// combination (strafe-right/aim-left) orbits in the opposite direction.
+//      You can make your camera move in a vertical-orbit as well by repeating
+// the strafe-up/pitch-down combination; the opposite combination (strafe-down/
+// pitch-up) orbits vertically in the opposite direction.
+//      I find 'orbiting' moves extremely helpful as I explore 3D scenes: try it!
+
+
 GUIbox.prototype.camStrafe_L = function() {
 //==============================================================================
 // Move horizontally left-wards, perpendicular to aiming direction, without
 // changing aiming direction or height above ground.
-  // 'rtSide' vector points rightwards, perpendicular to aiming direction.
+// 'rtSide' vector points rightwards, perpendicular to aiming direction.
+//
   var rtSide = vec4.fromValues(  Math.sin(this.camYaw), // x
                                 -Math.cos(this.camYaw), // y
                                 0.0, 0.0); // z, w (==0; vector, not point!)
@@ -636,5 +718,40 @@ GUIbox.prototype.camStrafe_R = function() {
   vec4.scale(rtSide, rtSide, this.camSpeed);  // scale length to set velocity,
   vec4.add(this.camAimPt, this.camAimPt, rtSide);  // add to BOTH points.
   vec4.add(this.camEyePt, this.camEyePt, rtSide);
+  drawAll();
+}
+
+GUIbox.prototype.camStrafe_Up = function() {
+//==============================================================================
+// Move upwards, perpendicular to aiming direction, without changing
+// aiming direction or pitch angle. CAREFUL! this is *NOT* just changing camera
+// altitude (Z value in world space), but instead moving in the 'up-vector'
+// direction calculated in mouseMove() above.
+var upSide = vec4.clone(this.camUpVec);   // make a local copy of this VECTOR
+  upSide[3] = 0.0;                        // set w=0 to its a vec4 VECTOR.
+  
+  vec4.scale(upSide, upSide, this.camSpeed);    // scale length to set velocity;
+// console.log('upSide:', upSide);
+// console.log('BEFORE\n camAimPt:', this.camAimPt, '\ncamEyePt:', this.camEyePt);
+
+  vec4.add(this.camAimPt, this.camAimPt, upSide);    // add to BOTH points.
+  vec4.add(this.camEyePt, this.camEyePt, upSide);
+//console.log('AFTER\n camAimPt:', this.camAimPt, '\ncamEyePt:', this.camEyePt);
+
+  drawAll();
+}
+
+GUIbox.prototype.camStrafe_Dn = function() {
+//==============================================================================
+// Move downwards, perpendicular to aiming direction, without changing
+// aiming direction or pitch angle.  CAREFUL! this is *NOT* just changing camera
+// altitude (Z value in world-space), but instead moving in the 'up-vector;
+// direction constructed in mouseMove() above.
+var upSide = vec4.clone(this.camUpVec);   // make a local copy of this VECTOR
+  upSide[3] = 0.0;                        // set w=0 to its a vec4 VECTOR.
+  
+  vec4.scale(upSide, upSide, -this.camSpeed);    // scale length to set -velocity;
+  vec4.add(this.camAimPt, this.camAimPt, upSide);    // add to BOTH points.
+  vec4.add(this.camEyePt, this.camEyePt, upSide);
   drawAll();
 }

@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <title>01_LineGrid READY</title>  <!-- Keep it short: title appears on browser tab-->
+    <title>Ray Tracer</title>  <!-- Keep it short: title appears on browser tab-->
 		<!-- OPTIONAL: let's surround canvas with a thin blue outline -->
 		<style type =" text/ css"> canvas {border: 2px dotted blue;} </style>
   </head>
@@ -29,7 +29,7 @@
 	<br>
 	    Mouse Drag: Aims the camera (turns left,right,up,down)
 	<br>
-	    W/S; A/D keys: move camera forward/backwards; strafe left/right.
+	    W/S; A/D keys: move camera forward/backwards; strafe left/right. Q/E: strafe down/up.
 	<br>
 <hr> <!-- Draw a horizontal-line separator------------------------------------------------------------->
 	Open Console, please: (right-click-->'Inspect Element'-->'Console' tab)
@@ -46,6 +46,7 @@
 		<div id='MouseDragResult'> MouseDragResult... </div>
 		<div id='MouseCanvas'> MouseCanvas... </div>
   </p>
+
 	<!--	Load in the JavaScript libraries supplied by our textbook 
 			(Matsuda et al., 2013 WebGL Programming Guide) that help us
 			with WebGL programming:
@@ -53,7 +54,7 @@
     <script src="lib/webgl-utils.js"></script>
     <script src="lib/webgl-debug.js"></script>
     <script src="lib/cuon-utils.js"></script>
-<!-- REMOVED!!		<script src="../lib/cuon-matrix-quat03.js"></script>  -->
+<!-- REMOVED!!		<script src="lib/cuon-matrix-quat03.js"></script>  -->
 <!-- Instead, we UPGRADED to Brandon Jones' far-faster, 
       far more complete vector/matrix/quaternion library: 
  			SEE: http://glmatrix.net/ fast vector/matrix lib for webGL  -->
@@ -61,8 +62,11 @@
 
 		<!-- finally, our own code: -->
 		<script src="JT_GUIbox_Lib.js"></script>
+		<script src="Camera.js"></script>
+		<script src="Geometry.js"></script>
+		<script src="ImageBuffer.js"></script>
+		<script src="Scene.js"></script>
 		<script src="JT_VBObox_Lib.js"></script>
-		<script src="TraceSupplement.js"></script>
     <script src="LineGrid.js"></script>
   </body>
 </html>

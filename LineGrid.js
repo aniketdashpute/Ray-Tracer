@@ -7,10 +7,10 @@
 // Chap 5: TexturedQuad.js (c) 2012 matsuda and kanda
 //					"WebGL Programming Guide" pg. 163
 // RotatingTranslatedTriangle.js (c) 2012 matsuda
-// JT_MultiShader.js  for EECS 351-1, Northwestern Univ. Jack Tumblin
-//
+// JT_MultiShader.js  for EECS 351-1, 
+//									Northwestern Univ. Jack Tumblin
 //----------------------------------------------------------------------
-//	traceWeek01_LineGrid.js 		Northwestern Univ. Jack Tumblin
+//	traceWeek02_MAIN.js 		Northwestern Univ. Jack Tumblin
 //----------------------------------------------------------------------
 //	--add comments
 //	--add mouse & keyboard functions + on-screen display & console reporting
@@ -25,7 +25,7 @@
 //               (convert by rounding: intRGB = floatRGB*255.5)
 //	--include re-sizing so that HTML-5 canvas always fits browser-window width
 //							(see 351-1 starter code: 7.11.JT_HelloCube_Resize.js, .html)
-//	--revise to use VBObox0,VBObox1 objects; each holds one VBO & one shader pgm,
+//	--revise to use VBObox0,VBObox1 objects; each holds one VBO & 1 shader pgm,
 //			so that changes to code for WebGL preview in the left viewport won't 
 //			affect code for the right viewport that displays ray-traced result by 
 //			texture-mapping.
@@ -47,17 +47,20 @@ var g_canvasID;									// HTML-5 'canvas' element ID#
 //-----Mouse,keyboard, GUI variables-----------
 var gui = new GUIbox(); // Holds all (Graphical) User Interface fcns & vars, for
                         // keyboard, mouse, HTML buttons, window re-sizing, etc.
-                        
+                        // Holds all camera-setting vars too:
+                        // gui.camFovy, gui.camAspect, gui.camNear
+                        // gui.camEyePt, gui.camAimPt, gui.camUpVec    
 //-----For the VBOs & Shaders:-----------------
 preView = new VBObox0();		// For WebGLpreview: holds one VBO and its shaders
 rayView = new VBObox1();		// for displaying the ray-tracing results.
 
 //-----------Ray Tracer Objects:---------------
-var g_myPic = new CImgBuf(256,256); // Create a floating-point image-buffer 
+var g_myPic = new CImgBuf(512,512); // Create a floating-point image-buffer 
                         // object to hold the image created by 'g_myScene' object.
-                        // CAUTION! use power-of-two size (256x256; 512x512, etc)
-                        //        to ensure WebGL 1.0 texture-mapping works properly
-var g_myScene = new CScene(g_myPic); // Create our ray-tracing object; 
+                        // CAUTION! WebGL 1.0 texture maps  require power-of-two sizes
+                        // (256, 512,1024,2048,etc).
+                        
+var g_myScene = new CScene(); // Create our ray-tracing object; 
                         // this contains our complete 3D scene & its camera 
                         // used to write a complete ray-traced image to the
                         // CImgBuf object 'g_myPic' given as argument.
@@ -67,19 +70,10 @@ var G_SCENE_MAX = 3;		// Number of scenes defined.
 
 var g_AAcode = 1;			// Antialiasing setting: 1 == NO antialiasing at all. 
                         // 2,3,4... == supersamples: 2x2, 3x3, 4x4, ...
+
 var G_AA_MAX = 4;				// highest super-sampling number allowed. 
 var g_isJitter = 0;     // ==1 for jitter, ==0 for no jitter.
 
-//-----For animation & timing:---------------------
-var g_lastMS = Date.now();			// Timestamp (in milliseconds) for our 
-                                // most-recently-drawn WebGL screen contents.  
-                                // Set & used by moveAll() fcn to update all
-                                // time-varying params for our webGL drawings.
-  // All time-dependent params (you can add more!)
-/*
-var g_angleNow0  =  0.0; 			  // Current rotation angle, in degrees.
-var g_angleRate0 = 45.0;				// Rotation angle rate, in degrees/second.
-*/
 //--END---GLOBAL VARIABLES------------------------------------------------------
 
 function main() {
@@ -87,7 +81,7 @@ function main() {
 // Function that begins our Javascript program (because our HTML file specifies 
 // its 'body' tag to define the 'onload' parameter as main() )
 
-//  test_glMatrix();		// make sure that the fast vector/matrix library we use
+//  test_glMatrix();	// make sure that the fast vector/matrix library we use
   										// is available and working properly.
 
   // Retrieve the HTML-5 <canvas> element where webGL will draw our pictures:
@@ -112,10 +106,7 @@ function main() {
 
   gui.init();                   // Register all Mouse & Keyboard Event-handlers
                                 // (see JT_GUIbox-Lib.js )
-
-test_glMatrix();	// Make sure you understand how glMatrix.js library works.
-					// (open console to see what's printed there)
-
+  g_myScene.initScene(1);       // initialize our ray-tracer (to default scene)
   // Initialize each of our 'vboBox' objects: 
   preView.init(gl);		// VBO + shaders + uniforms + attribs for WebGL preview
   rayView.init(gl);		//  "		"		" to display ray-traced on-screen result.
@@ -125,6 +116,13 @@ test_glMatrix();	// Make sure you understand how glMatrix.js library works.
   // width is twice its height.)
   
   drawAll();
+  //---------OPTIONAL: do all the things done by 't' key; make our initial
+  // ray-traced image automatically:
+  g_myScene.makeRayTracedImage(); // run the ray-tracer		
+  rayView.switchToMe(); // be sure OUR VBO & shaders are in use, then
+  rayView.reload();     // re-transfer VBO contents and texture-map contents
+  drawAll();            // re-draw BOTH viewports.
+  
 //----------------------------------------------------------------------------
 // NOTE! Our ray-tracer ISN'T 'animated' in the usual sense!
 // --No 'tick()' function, no continual automatic re-drawing/refreshing.
@@ -134,6 +132,25 @@ test_glMatrix();	// Make sure you understand how glMatrix.js library works.
 //  try calling drawAll() after ray-tracer finishes each set of 16 scanlines,
 //  or perhaps re-draw after every 1-2 seconds of ray-tracing.
 //----------------------------------------------------------------------------
+
+/*
+// TEST ray-transformations:
+  var test = new CGeom();
+  test.rayTranslate(3,4,5);
+  var rayBgn = new CRay();
+  var rayEnd = new CRay();
+  rayBgn.printMe('rayBgn');
+  vec4.transformMat4(rayEnd.orig, rayBgn.orig, test.worldRay2model);
+  vec4.transformMat4(rayEnd.dir,  rayBgn.dir,  test.worldRay2model);
+  rayBgn.printMe('rayBgn');
+  rayEnd.printMe('rayEnd');
+  console.log('Now rotate by 90 around x axis:');
+  test.rayRotate(0.5*Math.PI, 1,0,0);
+  vec4.transformMat4(rayEnd.orig, rayBgn.orig, test.worldRay2model);
+  vec4.transformMat4(rayEnd.dir,  rayBgn.dir,  test.worldRay2model);
+  rayBgn.printMe('rayBgn');
+  rayEnd.printMe('rayEnd');
+*/  
 }
 
 function print_mat4(a, nameStr) {
@@ -181,11 +198,12 @@ function test_glMatrix() {
 // properly. My search for 'webGL vector matrix library' found the GitHub 
 // project glMatrix is intended for WebGL use, and is very fast, open source 
 // and well respected.		 	SEE:       http://glmatrix.net/
-// NOTE: cuon-matrix.js library (supplied with our textbook: "WebGL 
+// 			NOTE: cuon-matrix.js library (supplied with our textbook: "WebGL 
 // Programming Guide") duplicates some of the glMatrix.js functions. For 
 // example, the glMatrix.js function 		mat4.lookAt() 		is a work-alike 
 //	 for the cuon-matrix.js function 		Matrix4.setLookAt().
 // Try some vector vec4 operations:
+
 	var myV4 = vec4.fromValues(1,8,4,7);				// create a 4-vector 
 																							// (without 'var'? global scope!)
   console.log('-----TEST------\n-----glMatrix.js library------------');
@@ -246,6 +264,8 @@ function test_glMatrix() {
 	//---------------------------------------------------------------------------
 	// As you can see, the 'mat4' object stores matrix contents in COLUMN-first 
 	// order; to display this translation matrix correctly, do this
+	// (suggests you might want to add another'print()' function for 
+	//  vec2, vec3, vec4, mat2, mat3, mat4): 
 	console.log('\n !AHA! COLUMN-MAJOR order:\n',
 	 'top-to-bottom starting at leftmost column.\n',
 	 'I wrote a print_mat4() fcn (just above)--\n',
@@ -272,6 +292,7 @@ function test_glMatrix() {
 
 	console.log('SUGGESTION:\n write similar fcns for mat2,mat3, vec2,vec3,vec4,',
 				' OR look into later versions of the glMatrix library...');
+
 	// Now test glMatrix concatenation;
   console.log('\n---------------------------',
               '\n Matrix Concatenation.',
