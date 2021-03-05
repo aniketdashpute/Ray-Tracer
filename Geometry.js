@@ -55,7 +55,7 @@ function CGeom(shapeSelect) {
 	    this.traceMe = function(inR,hit) { this.traceGrid(inR,hit);   }; 
     	this.xgap = 1.0;	// line-to-line spacing
     	this.ygap = 1.0;
-    	this.lineWidth = 0.25;	// fraction of xgap used for grid-line width
+    	this.lineWidth = 0.1;	// fraction of xgap used for grid-line width
     	this.lineColor = vec4.fromValues(0.1,0.5,0.1,1.0);  // RGBA green(A==opacity)
     	this.gapColor = vec4.fromValues( 0.9,0.9,0.9,1.0);  // near-white
 	    break;
