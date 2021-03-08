@@ -1,7 +1,3 @@
-//3456789_123456789_123456789_123456789_123456789_123456789_123456789_123456789
-// (JT: why the numbers? counts columns, helps me keep 80-char-wide listings,
-//  lets me see EXACTLY what the editor's 'line-wrap' feature will do.)
-
 //===  JT_tracer0-Scene.js  ===================================================
 // The object prototypes here and in related files (and their comments):
 //      JT_tracer1-Camera.js
@@ -317,12 +313,12 @@ CScene.prototype.initScene = function(num)
         // create our list of CGeom shapes that fill our 3D scene:
         //---Ground Plane-----
         // draw this in world-space; no transforms!
-        this.item.push(new CGeom(RT_GNDPLANE));   // Append gnd-plane to item[] array
+        this.item.push(new CGeom(GeomShape.GroundPlane));   // Append gnd-plane to item[] array
         iNow = this.item.length -1;               // get its array index.
                                                   // use default colors.
                                                   // no transforms needed.
         //-----Disk 1------           
-        this.item.push(new CGeom(RT_DISK));         // Append 2D disk to item[] &
+        this.item.push(new CGeom(GeomShape.Disk));         // Append 2D disk to item[] &
         iNow = this.item.length -1;                 // get its array index.
         // console.log('iNow should be 1; it is:', iNow);
         // set up distinctive coloring:
@@ -338,7 +334,7 @@ CScene.prototype.initScene = function(num)
         this.item[iNow].rayRotate(0.25*Math.PI, 0,0,1); // z-axis rotate 45deg.
       
         //-----Disk 2------ 
-        this.item.push(new CGeom(RT_DISK));         // Append 2D disk to item[] &
+        this.item.push(new CGeom(GeomShape.Disk));         // Append 2D disk to item[] &
         iNow = this.item.length -1;                 // get its array index.
         // set up distinctive coloring:
         vec4.set(this.item[iNow].gapColor,  0.0,0.0,1.0,1.0); // RGBA(A==opacity) blue
@@ -353,7 +349,7 @@ CScene.prototype.initScene = function(num)
         this.item[iNow].rayRotate(Math.PI/3, 0,0,1);    // z-axis rotate 60deg.
 
         //-----Sphere 1-----
-        this.item.push(new CGeom(RT_SPHERE));       // Append sphere to item[] &
+        this.item.push(new CGeom(GeomShape.Sphere));       // Append sphere to item[] &
         iNow = this.item.length -1;                 // get its array index.
         // Initially leave sphere at the origin. Once you see it, then
         // move it to a more-sensible location:
