@@ -465,6 +465,7 @@ CScene.prototype.makeRayTracedImage = function()
             // scale the color to get the mean value from the sum
             vec4.scale(sumColr, sumColr, 1/(this.xSuperSiz*this.ySuperSiz));
 
+            /*
             // DIAGNOSTIC:
             this.pixFlag = 0;
             if(i==this.imgBuf.xSiz/2 && j==this.imgBuf.ySiz/4)
@@ -473,8 +474,7 @@ CScene.prototype.makeRayTracedImage = function()
                 this.pixFlag = 1;
                 console.log("CScene.makeRayTracedImage() is at pixel [",i,", ",j,"].",
                 "by the cunning use of flags. (Eddie Izzard)");
-            }
-            // END DIAGNOSTIC
+            }*/
 
             // Set pixel color in our image buffer
             idx = (j*this.imgBuf.xSiz + i)*this.imgBuf.pixSiz;	// Array index at pixel (i,j) 
