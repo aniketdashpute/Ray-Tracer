@@ -455,37 +455,8 @@ CScene.prototype.makeRayTracedImage = function()
                         xSamp = xSamp + (Math.random()/2)/this.xSuperSiz;
                         ySamp = ySamp + (Math.random()/2)/this.ySuperSiz;
                     }
-                    this.rayCam.setEyeRay(this.eyeRay,xSamp,ySamp);
 
-                    // Trace a new eyeRay thru all CGeom items:
-                    // start by clearing our 'nearest hit-point', and
-                    myHit.init();
-                    for(k=0; k< this.item.length; k++)
-                    {
-                        // for every CGeom in item[] array,
-                        // trace eyeRay thru it,
-                        this.item[k].traceMe(this.eyeRay, myHit);
-                        // & keep nearest hit point in myHit.
-                    }
-                    /*
-                    // print values during just one selected pixel
-                    if(this.pixFlag == 1) {console.log("flag: x,y:myHit", i,j, myHit);}
-                    */
-
-                    // Find eyeRay color from myHit
-                    if (myHit.hitNum == 0)
-                    {
-                        // use myGrid tracing to determine color
-                        vec4.copy(colr, myHit.hitGeom.gapColor);
-                    }
-                    else if (myHit.hitNum == 1)
-                    {
-                        vec4.copy(colr, myHit.hitGeom.lineColor);
-                    }
-                    else // if (myHit.hitNum== -1)
-                    {
-                        vec4.copy(colr, this.skyColor);
-                    }
+                    colr = this.traceRay(this.eyeRay, xSamp, ySamp, myHit);
 
                     // add the color to sum color for averaging
                     vec4.add(sumColr, sumColr, colr);
@@ -514,4 +485,44 @@ CScene.prototype.makeRayTracedImage = function()
     }
     // create integer image from floating-point buffer.
     this.imgBuf.float2int();
+}
+
+CScene.prototype.traceRay = function(eyeRay, xSamp, ySamp, myHit)
+{
+    this.rayCam.setEyeRay(eyeRay,xSamp,ySamp);
+
+    // Trace a new eyeRay thru all CGeom items:
+    // start by clearing our 'nearest hit-point'
+    myHit.init();
+    for(k=0; k< this.item.length; k++)
+    {
+        // for every CGeom in item[] array,
+        // trace eyeRay thru it & keep nearest hit point in myHit.
+        this.item[k].traceMe(eyeRay, myHit);
+    }
+
+    // Now get the color for this ray
+    return this.findShade(myHit);
+}
+
+CScene.prototype.findShade = function(myHit)
+{
+    var colr = vec4.create();
+
+    // Find eyeRay color from myHit
+    if (myHit.hitNum == 0)
+    {
+        // use myGrid tracing to determine color
+        vec4.copy(colr, myHit.hitGeom.gapColor);
+    }
+    else if (myHit.hitNum == 1)
+    {
+        vec4.copy(colr, myHit.hitGeom.lineColor);
+    }
+    else // if (myHit.hitNum== -1)
+    {
+        vec4.copy(colr, this.skyColor);
+    }
+
+    return colr;
 }
