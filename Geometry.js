@@ -175,10 +175,10 @@ CGeom.prototype.rayRotate = function(rad, ax, ay, az)
     b10 = y * x * t + z * s; b11 = y * y * t + c;     b12 = y * z * t - x * s; 
     b20 = z * x * t - y * s; b21 = z * y * t + x * s; b22 = z * z * t + c;
     var b = mat4.create();  // build 4x4 rotation matrix from these
-    b[s0] = b00; b[4] = b01; b[ 8] = b02; b[12] = 0.0; // row0
-    b[s1] = b10; b[5] = b11; b[ 9] = b12; b[13] = 0.0; // row1
-    b[s2] = b20; b[6] = b21; b[10] = b22; b[14] = 0.0; // row2
-    b[s3] = 0.0; b[7] = 0.0; b[11] = 0.0; b[15] = 1.0; // row3
+    b[0] = b00; b[4] = b01; b[ 8] = b02; b[12] = 0.0; // row0
+    b[1] = b10; b[5] = b11; b[ 9] = b12; b[13] = 0.0; // row1
+    b[2] = b20; b[6] = b21; b[10] = b22; b[14] = 0.0; // row2
+    b[3] = 0.0; b[7] = 0.0; b[11] = 0.0; b[15] = 1.0; // row3
     // print_mat4(b,'rotate()');
     // [new] = [R^-1][old]
     mat4.multiply(this.worldRay2model, b, this.worldRay2model);
