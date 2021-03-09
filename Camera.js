@@ -249,7 +249,7 @@ CCamera.prototype.setEyeRaySourceToDest = function(myeRay, mySource, myDest)
     // set Ray origin
     vec4.copy(myeRay.orig, mySource);
 
-    // set Ray direction
+    // set Ray direction (not normalized)
     vec4.copy(myeRay.dir, vDir);
 }
 

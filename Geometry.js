@@ -54,7 +54,7 @@ function CGeom(shapeSelect)
     switch(this.shapeType) {
         case GeomShape.GroundPlane:
             //set the ray-tracing function (so we call it using item[i].traceMe() )
-            this.traceMe = function(inR,hit,bIsShadowRay) { this.traceGrid(inR,hit, bIsShadowRay);   }; 
+            this.traceMe = function(inR,hit,bIsShadowRay) { return this.traceGrid(inR,hit, bIsShadowRay);   }; 
             this.xgap = 1.0;	// line-to-line spacing
             this.ygap = 1.0;
             this.lineWidth = 0.1;	// fraction of xgap used for grid-line width
@@ -63,7 +63,7 @@ function CGeom(shapeSelect)
             break;
         case GeomShape.Disk:
             //set the ray-tracing function (so we call it using item[i].traceMe() )
-            this.traceMe = function(inR,hit,bIsShadowRay) { this.traceDisk(inR,hit, bIsShadowRay);   };
+            this.traceMe = function(inR,hit,bIsShadowRay) { return this.traceDisk(inR,hit, bIsShadowRay);   };
             this.diskRad = 2.0;   // default radius of disk centered at origin
             // Disk line-spacing is set to 61/107 xgap,ygap  (ratio of primes)
             // disk line-width is set to 3* lineWidth, and it swaps lineColor & gapColor. 
@@ -75,7 +75,7 @@ function CGeom(shapeSelect)
             break;
         case GeomShape.Sphere:
             //set the ray-tracing function (so we call it using item[i].traceMe() )
-            this.traceMe = function(inR,hit,bIsShadowRay) { this.traceSphere(inR,hit, bIsShadowRay); }; 
+            this.traceMe = function(inR,hit,bIsShadowRay) { return this.traceSphere(inR,hit, bIsShadowRay); }; 
             this.lineColor = vec4.fromValues(0.0,0.3,1.0,1.0);  // RGBA blue(A==opacity)
             break;
         case GeomShape.Box:
@@ -264,7 +264,8 @@ CGeom.prototype.traceGrid = function(inRay, myHit, bIsShadowRay)
 
     // The BIG QUESTION:  ? Did we just find a hit-point for inRay 
     // =================  ? that is CLOSER to camera than myHit?
-    if(t0 < 0 || t0 > myHit.t0)
+    // if(t0 < 0 || t0 > myHit.t0)
+    if(t0 < 0 || (!bIsShadowRay && t0 > myHit.t0))
     {
         // NO. Hit-point is BEHIND us, or it's further away than myHit.
         // Leave myHit unchanged. Don't do any further calcs.
@@ -372,7 +373,7 @@ CGeom.prototype.traceDisk = function(inRay, myHit, bIsShadowRay)
     // (disk is in z==0 plane)
     var t0 = -rayT.orig[2]/rayT.dir[2];
 
-    if(t0 < 0 || t0 > myHit.t0)
+    if(t0 < 0 || (!bIsShadowRay && t0 > myHit.t0))
     {
         return false;
     }
@@ -492,7 +493,7 @@ CGeom.prototype.traceSphere = function(inRay, myHit, bIsShadowRay)
         // report error and quit.  LATER we can use this case to
         // handle rays through transparent spheres.
         // console.log("CGeom.traceSphere() ERROR! rayT origin at or inside sphere!\n\n");
-        return false;
+        return true;
     }
 
     // tcaS == SCALED tca;
@@ -520,7 +521,11 @@ CGeom.prototype.traceSphere = function(inRay, myHit, bIsShadowRay)
     // ***IF*** you're tracing a shadow ray you can stop right here: we know
     // that this ray's path to the light-source is blocked by this CGeom object.
 
-    if (true == bIsShadowRay) return true;
+    if (true == bIsShadowRay)
+    {
+        // console.log("Sphere intersected");
+        return true;
+    }
 
     // STEP 4: Measure 2nd triangle
     // SQUARED half-chord length.

@@ -84,7 +84,7 @@ function main()
     gui.init();
     
     // initialize our ray-tracer (to default scene)
-    g_myScene.initScene(1);
+    g_myScene.initScene(0);
     
     // Initialize each of our 'vboBox' objects: 
     // VBO + shaders + uniforms + attribs for WebGL preview

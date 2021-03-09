@@ -39,7 +39,7 @@ When users press the 'T' or 't' key (see GUIbox method gui.keyPress() ),
   This 'makeRayRacedImage() function orchestrates creation and recursive tracing 
   of millions of rays to find the on-screen color of each pixel in the CImgBuf
   object set as its destination (g_myPic)
-  
+
   The CScene object also contains & uses:
 		--CRay	== a 3D ray object in an unspecified coord. system (usually 'world').
 		--CCamera == ray-tracing camera object defined the 'world' coordinate system.
@@ -227,7 +227,9 @@ function CScene()
     // (why?  JS uses 52-bit mantissa;
     // 2^-52 = 2.22E-16, so 10^-15 gives a
     // safety margin of 20:1 for small # calcs)                                    
-    this.RAY_EPSILON = 1.0E-15;       
+    this.RAY_EPSILON = 1.0E-15;
+
+    this.epsilon = 1.0E-5;
     
     this.imgBuf = g_myPic;
     // DEFAULT output image buffer
@@ -365,6 +367,9 @@ CScene.prototype.initScene = function(num)
             // get its array index.
             iNow = this.item.length -1;
 
+            // (Be sure to do these same transforms in WebGL preview; find them in the
+            //  JT_VBObox-lib.js file, in VBObox0.draw() function)
+
             // Initially leave sphere at the origin. Once you see it, then
             // move it to a more-sensible location:
             // start in world coord axes
@@ -453,6 +458,17 @@ CScene.prototype.makeRayTracedImage = function()
     {
         for(i = 0; i < this.imgBuf.xSiz; i++)
         {
+
+           // DIAGNOSTIC:
+           this.pixFlag = 0;
+           if(i==this.imgBuf.xSiz/2 && j==this.imgBuf.ySiz/4)
+           {
+               // pixFlag==1 for JUST ONE pixel
+               this.pixFlag = 1;
+               console.log("CScene.makeRayTracedImage() is at pixel [",i,", ",j,"].",
+               "by the cunning use of flags. (Eddie Izzard)");
+           }
+
             // keep the sum here, will be used to keep track
             // of multiple rays when doing anti-aliasing operations
             vec4.set(sumColr, 0, 0, 0, 0);
@@ -481,17 +497,6 @@ CScene.prototype.makeRayTracedImage = function()
             // scale the color to get the mean value from the sum
             vec4.scale(sumColr, sumColr, 1/(this.xSuperSiz*this.ySuperSiz));
 
-            /*
-            // DIAGNOSTIC:
-            this.pixFlag = 0;
-            if(i==this.imgBuf.xSiz/2 && j==this.imgBuf.ySiz/4)
-            {
-                // pixFlag==1 for JUST ONE pixel
-                this.pixFlag = 1;
-                console.log("CScene.makeRayTracedImage() is at pixel [",i,", ",j,"].",
-                "by the cunning use of flags. (Eddie Izzard)");
-            }*/
-
             // Set pixel color in our image buffer
             idx = (j*this.imgBuf.xSiz + i)*this.imgBuf.pixSiz;	// Array index at pixel (i,j) 
             this.imgBuf.fBuf[idx   ] = sumColr[0];
@@ -505,6 +510,11 @@ CScene.prototype.makeRayTracedImage = function()
 
 CScene.prototype.traceRay = function(eyeRay, myHit)
 {
+    if (this.pixFlag == 1)
+    {
+        console.log("Inside traceRay");
+    }
+
     // Trace a new eyeRay thru all CGeom items:
     // start by clearing our 'nearest hit-point'
     myHit.init();
@@ -515,22 +525,39 @@ CScene.prototype.traceRay = function(eyeRay, myHit)
         this.item[k].traceMe(eyeRay, myHit, false);
     }
 
+    if (this.pixFlag == 1)
+    {
+        console.log("rayOrig: ", eyeRay.orig[0]," ",eyeRay.orig[1]," ",eyeRay.orig[2]," ",eyeRay.orig[3]," ");
+        console.log("rayDirection: ", eyeRay.dir[0]," ",eyeRay.dir[1]," ",eyeRay.dir[2]," ",eyeRay.dir[3]," ");
+        console.log("myHit.hitPT: ", myHit.hitPt[0]," ",myHit.hitPt[1]," ",myHit.hitPt[2]," ",myHit.hitPt[3]," ");
+    }
+
     // Now get the color for this ray
-    return this.findShade(myHit);
+    return this.findShade(eyeRay, myHit);
 }
 
-CScene.prototype.findShade = function(myHit)
+CScene.prototype.findShade = function(eyeRay, myHit)
 {
+    if (this.pixFlag == 1)
+    {
+        console.log("Inside findShade");
+    }
+
     var colr = vec4.create();
 
-    // light position will be destination for shadow ray
-    var vDest = vec4.fromValues(3.0, 0.0, 0.0, 1.0);
+    // for shadows:
+    // Light position will be destination
+    // TODO: for now, assume a light position
+    var vDest = vec4.fromValues(-15.0, -15.0, 15.0, 1.0);
     // hit point will be the source
     var vSource = myHit.hitPt;
+
+    // scale and add an epsilon
+    vec4.scaleAndAdd(vSource, vSource, eyeRay.dir, -this.epsilon);
     
     if (true == this.isInShadow(myHit, vSource, vDest))
     {
-        console.log("SHADOW!!!!");
+        // console.log("SHADOW!!!!");
         // in shadow region, return;
         vec4.copy(colr, this.blackShadow);
         return colr;
@@ -558,16 +585,35 @@ CScene.prototype.findShade = function(myHit)
 
 CScene.prototype.isInShadow = function(myHit, vSource, vDest)
 {
+    if (this.pixFlag == 1)
+    {
+        console.log("Inside isInShadow");
+    }
+
     // trace the ray from hit point to light source
     // if there is an obstacle, then give shadow
 
     // generate the eye Ray
     this.rayCam.setEyeRaySourceToDest(this.eyeRay2, vSource, vDest);
 
-    for(k=0; k< this.item.length; k++)
+    if (this.pixFlag == 1)
     {
+        console.log("2 rayOrig: ", this.eyeRay2.orig[0]," ",this.eyeRay2.orig[1]," ",this.eyeRay2.orig[2]," ",this.eyeRay2.orig[3]," ");
+        console.log("2 rayDirection: ", this.eyeRay2.dir[0]," ",this.eyeRay2.dir[1]," ",this.eyeRay2.dir[2]," ",this.eyeRay2.dir[3]," ");
+    }
+
+    for(k=0; k< this.item.length; k++)
+    {   
+        if (this.pixFlag == 1)
+        {
+            //console.log("this.item: ", this.item[k]);
+        }
         // if it intersects any object, return true
-        if (this.item[k].traceMe(this.eyeRay2, myHit, true)) return true;
+        var bIsIntersecting = this.item[k].traceMe(this.eyeRay2, myHit, true);
+        if (bIsIntersecting)
+        {
+            return true;
+        }
     }
 
     return false;
