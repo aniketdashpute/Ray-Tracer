@@ -195,73 +195,80 @@ function CHitList()
 
 function CScene()
 {
-//=============================================================================
-// This is a complete ray tracer object prototype (formerly a C/C++ 'class').
-//      My code uses just one CScene instance (g_myScene) to describe the entire 
-//			ray tracer.  Note that I could add more CScene objects to make multiple
-//			ray tracers (perhaps run on different threads or processors) and then 
-//			combine their results into a giant video sequence, a giant image, or 
-//			use one ray-traced result as input to make the next ray-traced result.
-//
-//The CScene prototype includes:
-// One CImgBuf object 'imgBuf' used to hold ray-traced result image.
-//      (see CScene.setImgBuf() method below)
-// One CCamera object that describes an antialiased ray-tracing camera;
-//      in my code, it is the 'rayCam' variable within the CScene prototype.
-//      The CCamera class defines the SOURCE of rays we trace from our eyepoint
-//      into the scene, and uses those rays to set output image pixel values.
-// One CRay object 'eyeRay' that describes the ray we're currently tracing from
-//      eyepoint into the scene.
-// a COLLECTION of CGeom objects: each describe an individual visible thing; a
-//      single item or thing we may see in the scene.  That collection is the 
-//			held in the 'item[]' array within the CScene class.
-//      		Each CGeom element in the 'item[]' array holds one shape on-screen.
-//      To see three spheres and a ground-plane we'll have 4 CGeom objects, one 
-//			for each of the spheres, and one for the ground-plane.
-//      Each CGeom obj. includes a 'matlIndex' index number that selects which
-//      material to use in rendering the CGeom shape. I assume ALL lights in a
-//      scene may affect ALL CGeom shapes, but you may wish to add an light-src
-//      index to permit each CGeom object to choose which lights(s) affect it.
-// One CHitList object 'eyeHits' that describes each 3D point where 'eyeRay'
-//      pierces a shape (a CGeom object) in our CScene.  Each CHitList object
-//      in our ray-tracer holds a COLLECTION of hit-points (CHit objects) for a
-//      ray, and keeps track of which hit-point is closest to the camera. That
-//			collection is held in the eyeHits member of the CScene class.
-// a COLLECTION of CMatl objects; each describes one light-modifying material'
-//      hold this collection in  'matter[]' array within the CScene class).
-//      Each CMatl element in the 'matter[]' array describes one particular
-//      individual material we will use for one or more CGeom shapes. We may
-//      have one CMatl object that describes clear glass, another for a
-//      Phong-shaded brass-metal material, another for a texture-map, another
-//      for a bump mapped material for the surface of an orange (fruit),
-//      another for a marble-like material defined by Perlin noise, etc.
-// a COLLECTION of CLight objects that each describe one light source.  
-//			That collection is held in the 'lamp[]' array within the CScene class.
-//      Note that I apply all lights to all CGeom objects.  You may wish to add
-//      an index to the CGeom class to select which lights affect each item.
-//
-// The default CScene constructor creates a simple scene that will create a
-// picture if traced:
-// --rayCam with +/- 45 degree Horiz field of view, aimed in the -Z direcion 
-// 			from the world-space location (0,0,0),
-// --item[0] is a ground-plane grid at z= -5.
-//
-//  Calling 'initScene()' lets you choose other scenes, such as:
-//  --our 'rayCam' camera at (5,5,5) aimed at the origin;
-//  --item[0] shape, a unit sphere at the origin that uses matter[0] material;
-//  --matter[0] material is a shiny red Phong-lit material, lit by lamp[0];
-//  --lamp[0] is a point-light source at location (5,5,5).
+    // This is a complete ray tracer object prototype (formerly a C/C++ 'class').
+    //      My code uses just one CScene instance (g_myScene) to describe the entire 
+    //			ray tracer.  Note that I could add more CScene objects to make multiple
+    //			ray tracers (perhaps run on different threads or processors) and then 
+    //			combine their results into a giant video sequence, a giant image, or 
+    //			use one ray-traced result as input to make the next ray-traced result.
+    //
+    //The CScene prototype includes:
+    // One CImgBuf object 'imgBuf' used to hold ray-traced result image.
+    //      (see CScene.setImgBuf() method below)
+    // One CCamera object that describes an antialiased ray-tracing camera;
+    //      in my code, it is the 'rayCam' variable within the CScene prototype.
+    //      The CCamera class defines the SOURCE of rays we trace from our eyepoint
+    //      into the scene, and uses those rays to set output image pixel values.
+    // One CRay object 'eyeRay' that describes the ray we're currently tracing from
+    //      eyepoint into the scene.
+    // a COLLECTION of CGeom objects: each describe an individual visible thing; a
+    //      single item or thing we may see in the scene.  That collection is the 
+    //			held in the 'item[]' array within the CScene class.
+    //      		Each CGeom element in the 'item[]' array holds one shape on-screen.
+    //      To see three spheres and a ground-plane we'll have 4 CGeom objects, one 
+    //			for each of the spheres, and one for the ground-plane.
+    //      Each CGeom obj. includes a 'matlIndex' index number that selects which
+    //      material to use in rendering the CGeom shape. I assume ALL lights in a
+    //      scene may affect ALL CGeom shapes, but you may wish to add an light-src
+    //      index to permit each CGeom object to choose which lights(s) affect it.
+    // One CHitList object 'eyeHits' that describes each 3D point where 'eyeRay'
+    //      pierces a shape (a CGeom object) in our CScene.  Each CHitList object
+    //      in our ray-tracer holds a COLLECTION of hit-points (CHit objects) for a
+    //      ray, and keeps track of which hit-point is closest to the camera. That
+    //			collection is held in the eyeHits member of the CScene class.
+    // a COLLECTION of CMatl objects; each describes one light-modifying material'
+    //      hold this collection in  'matter[]' array within the CScene class).
+    //      Each CMatl element in the 'matter[]' array describes one particular
+    //      individual material we will use for one or more CGeom shapes. We may
+    //      have one CMatl object that describes clear glass, another for a
+    //      Phong-shaded brass-metal material, another for a texture-map, another
+    //      for a bump mapped material for the surface of an orange (fruit),
+    //      another for a marble-like material defined by Perlin noise, etc.
+    // a COLLECTION of CLight objects that each describe one light source.  
+    //			That collection is held in the 'lamp[]' array within the CScene class.
+    //      Note that I apply all lights to all CGeom objects.  You may wish to add
+    //      an index to the CGeom class to select which lights affect each item.
+    //
+    // The default CScene constructor creates a simple scene that will create a
+    // picture if traced:
+    // --rayCam with +/- 45 degree Horiz field of view, aimed in the -Z direcion 
+    // 			from the world-space location (0,0,0),
+    // --item[0] is a ground-plane grid at z= -5.
+    //
+    //  Calling 'initScene()' lets you choose other scenes, such as:
+    //  --our 'rayCam' camera at (5,5,5) aimed at the origin;
+    //  --item[0] shape, a unit sphere at the origin that uses matter[0] material;
+    //  --matter[0] material is a shiny red Phong-lit material, lit by lamp[0];
+    //  --lamp[0] is a point-light source at location (5,5,5).
 
 
-    this.RAY_EPSILON = 1.0E-15;       // ray-tracer precision limits; treat 
-                                    // any value smaller than this as zero.
-                                    // (why?  JS uses 52-bit mantissa;
-                                    // 2^-52 = 2.22E-16, so 10^-15 gives a
-                                    // safety margin of 20:1 for small # calcs)
-                                    
-    this.imgBuf = g_myPic;            // DEFAULT output image buffer
-                                    // (change it with setImgBuf() if needed)
-    this.eyeRay = new CRay();	        // the ray from the camera for each pixel
+    // ray-tracer precision limits; treat 
+    // any value smaller than this as zero.
+    // (why?  JS uses 52-bit mantissa;
+    // 2^-52 = 2.22E-16, so 10^-15 gives a
+    // safety margin of 20:1 for small # calcs)                                    
+    this.RAY_EPSILON = 1.0E-15;       
+    
+    this.imgBuf = g_myPic;
+    // DEFAULT output image buffer
+    // (change it with setImgBuf() if needed)
+
+    // the ray from the camera for each pixel
+    this.eyeRay = new CRay();
+    // secondary shadow ray for each pixel
+    // (initializing globally to avoid regeneration every time)
+    this.eyeRay2 = new CRay();
+
     this.rayCam = new CCamera();	    // the 3D camera that sets eyeRay values:
                                     // this is the DEFAULT camera (256,256).
                                     // (change it with setImgBuf() if needed)
@@ -302,6 +309,7 @@ CScene.prototype.initScene = function(num)
                                 // declared just above main().
     // Set default sky color:
     this.skyColor = vec4.fromValues( 0.3,1.0,1.0,1.0);  // cyan/bright blue
+    this.blackShadow = vec4.fromValues(0.0, 0.0, 0.0, 1.0);
     // Empty the 'item[] array -- discard all leftover CGeom objects it may hold.
     this.item.length = 0;       
     var iNow = 0;         // index of the last CGeom object put into item[] array
@@ -456,7 +464,9 @@ CScene.prototype.makeRayTracedImage = function()
                         ySamp = ySamp + (Math.random()/2)/this.ySuperSiz;
                     }
 
-                    colr = this.traceRay(this.eyeRay, xSamp, ySamp, myHit);
+                    this.rayCam.setEyeRay(this.eyeRay,xSamp,ySamp);
+                    var bIsShadowRay = false;
+                    colr = this.traceRay(this.eyeRay, myHit, bIsShadowRay);
 
                     // add the color to sum color for averaging
                     vec4.add(sumColr, sumColr, colr);
@@ -487,10 +497,8 @@ CScene.prototype.makeRayTracedImage = function()
     this.imgBuf.float2int();
 }
 
-CScene.prototype.traceRay = function(eyeRay, xSamp, ySamp, myHit)
+CScene.prototype.traceRay = function(eyeRay, myHit, bIsShadowRay)
 {
-    this.rayCam.setEyeRay(eyeRay,xSamp,ySamp);
-
     // Trace a new eyeRay thru all CGeom items:
     // start by clearing our 'nearest hit-point'
     myHit.init();
@@ -498,7 +506,7 @@ CScene.prototype.traceRay = function(eyeRay, xSamp, ySamp, myHit)
     {
         // for every CGeom in item[] array,
         // trace eyeRay thru it & keep nearest hit point in myHit.
-        this.item[k].traceMe(eyeRay, myHit);
+        this.item[k].traceMe(eyeRay, myHit, bIsShadowRay);
     }
 
     // Now get the color for this ray
@@ -508,6 +516,20 @@ CScene.prototype.traceRay = function(eyeRay, xSamp, ySamp, myHit)
 CScene.prototype.findShade = function(myHit)
 {
     var colr = vec4.create();
+
+    // light position will be destination for shadow ray
+    var vDest = vec4.fromValues(3.0, 0.0, 0.0, 1.0);
+    // hit point will be the source
+    var vSource = myHit.hitPt;
+    
+    if (true == this.isInShadow(myHit, vSource, vDest))
+    {
+        console.log("SHADOW!!!!");
+        // in shadow region, return;
+        vec4.copy(colr, this.blackShadow);
+        return colr;
+    }
+    // console.log("NOOO SHADOW");
 
     // Find eyeRay color from myHit
     if (myHit.hitNum == 0)
@@ -519,10 +541,30 @@ CScene.prototype.findShade = function(myHit)
     {
         vec4.copy(colr, myHit.hitGeom.lineColor);
     }
-    else // if (myHit.hitNum== -1)
+    else //if (myHit.hitNum == -1)
     {
         vec4.copy(colr, this.skyColor);
     }
 
+    // vec4.lerp(out, a, b, t) => out = a + t * (b - a);
+
     return colr;
+}
+
+CScene.prototype.isInShadow = function(myHit, vSource, vDest)
+{
+    // trace the ray from hit point to light source
+    // if there is an obstacle, then give shadow
+
+    // generate the eye Ray
+    this.rayCam.setEyeRaySourceToDest(this.eyeRay2, vSource, vDest);
+
+
+    for(k=0; k< this.item.length; k++)
+    {
+        // if it intersects any object, return true
+        if (this.item[k].traceMe(this.eyeRay2, myHit, true)) return true;
+    }
+
+    return false;
 }
