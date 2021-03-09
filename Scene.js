@@ -1,27 +1,11 @@
-//===  JT_tracer0-Scene.js  ===================================================
-// The object prototypes here and in related files (and their comments):
-//      JT_tracer1-Camera.js
-//      JT_tracer2-Geom.js
-//      JT_tracer3-ImgBuf.js
-// are suitable for any and all features described in the Ray-Tracing Project 
-// Assignment Sheet for EECS 351-2 Intermediate Computer Graphics.
-//
-// HOWEVER, they're not required, nor even particularly good:
-//				(notably awkward style from their obvious C/C++ origins) 
-// They're here to help you get 'started' on better code of your own,
-// and to help you avoid common structural 'traps' in writing ray-tracers
-//		that might otherwise force ugly/messy refactoring later, such as:
-//  --lack of a well-polished vector/matrix library; e.g. open-src glmatrix.js
-//  --lack of floating-point RGB values to compute light transport accurately,
-//	--no distinct 'camera' and 'image' objects or 'trace' and 'display' funcs to 
-// 		separate slow ray-tracing steps from fast screen-display and refresh.
-//	--lack of ray-trace image-buffer (window re-size would discard your work!) 
-//  --lack of texture-mapped image display; permits ray-traced image of any 
-//		resolution to display on any screen at any desired image size
-//	--ability to easily match OpenGL/WebGL functions with ray-tracing results, 
-//		using identically-matching ray-tracing functions for cameras, views, 
-//		transformations, lighting, and materials (e.g. rayFrustum(), rayLookAt(); 
-//		rayTranlate(), rayRotate(), rayScale()...)
+/*******************************************************************
+ * File: Scene.js
+ * Author: Aniket Dashpute
+ * Credits: Built from starter code by Prof. Jack Tumblin
+ * Northwestern University
+*******************************************************************/
+
+// JT Tips:
 //  --a straightforward method to implement scene graphs & jointed objects. 
 //		Do it by transforming world-space rays to model coordinates, rather than 
 //		models to world coords, using a 4x4 worl2model matrix stored in each 
@@ -41,15 +25,7 @@
 
 /*
 -----------ORGANIZATION:-----------
-I recommend using just one or two global top-level objects (put above main() )
-  g_myPic == new CImgBuf(512,512);  // your 'image buffer' object to hold 
-                                    // a floating-point ray-traced image, and
-	g_myScene = new CScene();         // your ray-tracer, which can fill any
-	                                  // CImgBuf 'image buffer' you give to it.
-	g_myScene.setImgBuf(g_myPic);     // Sets ray-tracers destination. 
-	g_myScene.initScene(num);         // Sets up selected 3D scene for ray-tracer;
-	                                  // Ready to trace!
-		
+
 One CScene object contains all parts of our ray-tracer: 
   its camera (CCamera) object, 
   its collection of 3D shapes (CGeom), 
@@ -62,7 +38,8 @@ When users press the 'T' or 't' key (see GUIbox method gui.keyPress() ),
   'destination' by calling the CScene.setImgBuf() function.
   This 'makeRayRacedImage() function orchestrates creation and recursive tracing 
   of millions of rays to find the on-screen color of each pixel in the CImgBuf
-  object set as its destination (g_myPic).
+  object set as its destination (g_myPic)
+  
   The CScene object also contains & uses:
 		--CRay	== a 3D ray object in an unspecified coord. system (usually 'world').
 		--CCamera == ray-tracing camera object defined the 'world' coordinate system.
@@ -75,13 +52,6 @@ When users press the 'T' or 't' key (see GUIbox method gui.keyPress() ),
 		   the eyeRay; another for rays recursively-traced from eye-ray hit-points,
 		   such as rays for shadow, reflection, transparency, etc.)
 */
-
-//----------------------------------------------------------------------------
-// NOTE: JavaScript has no 'class-defining' statements or declarations: instead
-// we simply create a new object type by defining its constructor function, and
-// add member methods/functions using JavaScript's 'prototype' feature.
-// SEE: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/prototype 
-//----------------------------------------------------------------------------
 
 var g_t0_MAX = 1.23E16;  // 'sky' distance; approx. farthest-possible hit-point.
 
@@ -290,108 +260,142 @@ CScene.prototype.setImgBuf = function(nuImg)
 
 CScene.prototype.initScene = function(num)
 {
-//==============================================================================
-// Initialize our ray tracer, including camera-settings, output image buffer
-// to use.  Then create a complete 3D scene (CGeom objects, materials, lights, 
-// camera, etc) for viewing in both the ray-tracer **AND** the WebGL previewer.
-// num == 0: basic ground-plane grid;
-//     == 1: ground-plane grid + round 'disc' object;
-//     == 2: ground-plane grid + sphere
-//     == 3: ground-plane grid + sphere + 3rd shape, etc.
+    // Initialize our ray tracer, including camera-settings, output image buffer
+    // to use.  Then create a complete 3D scene (CGeom objects, materials, lights, 
+    // camera, etc) for viewing in both the ray-tracer **AND** the WebGL previewer.
+    // num == 0: basic ground-plane grid;
+    //     == 1: ground-plane grid + round 'disc' object;
+    //     == 2: ground-plane grid + sphere
+    //     == 3: ground-plane grid + sphere + 3rd shape, etc.
 
-    if(num == undefined) num = 0;   // (in case setScene() called with no arg.)
+    // (in case setScene() called with no arg.)
+    if(num == undefined) num = 0;
     // Set up ray-tracing camera to use all the same camera parameters that
     // determine the WebGL preview.  GUIbox fcns can change these, so be sure
     // to update these again just before you ray-trace:
     this.rayCam.rayPerspective(gui.camFovy, gui.camAspect, gui.camNear);
     this.rayCam.rayLookAt(gui.camEyePt, gui.camAimPt, gui.camUpVec);
-    this.setImgBuf(g_myPic);    // rendering target: our global CImgBuf object
-                                // declared just above main().
+
+    // rendering target: our global CImgBuf object
+    // declared just above main().
+    this.setImgBuf(g_myPic);
+
     // Set default sky color:
-    this.skyColor = vec4.fromValues( 0.3,1.0,1.0,1.0);  // cyan/bright blue
+    // cyan/bright blue
+    this.skyColor = vec4.fromValues(0.3,1.0,1.0,1.0);
+
+    // Shadow color: black
     this.blackShadow = vec4.fromValues(0.0, 0.0, 0.0, 1.0);
-    // Empty the 'item[] array -- discard all leftover CGeom objects it may hold.
-    this.item.length = 0;       
-    var iNow = 0;         // index of the last CGeom object put into item[] array
+
+    // Empty the item[] array, discard all leftover CGeom objects it may hold.
+    this.item.length = 0;
+    // index of the last CGeom object put into item[] array
+    var iNow = 0;
   
     // set up new scene:
     switch(num)
     {
-        case 0:     // (default scene number; must create a 3D scene for ray-tracing
-        // create our list of CGeom shapes that fill our 3D scene:
-        //---Ground Plane-----
-        // draw this in world-space; no transforms!
-        this.item.push(new CGeom(GeomShape.GroundPlane));   // Append gnd-plane to item[] array
-        iNow = this.item.length -1;               // get its array index.
-                                                  // use default colors.
-                                                  // no transforms needed.
-        //-----Disk 1------           
-        this.item.push(new CGeom(GeomShape.Disk));         // Append 2D disk to item[] &
-        iNow = this.item.length -1;                 // get its array index.
-        // console.log('iNow should be 1; it is:', iNow);
-        // set up distinctive coloring:
-        vec4.set(this.item[iNow].gapColor,  0.3,0.6,0.7,1.0); // RGBA(A==opacity) bluish gray   
-        vec4.set(this.item[iNow].lineColor, 0.7,0.3,0.3,1.0);  // muddy red
-        // Now apply transforms to set disk's size, orientation, & position.
-        // (Be sure to do these same transforms in WebGL preview; find them in the
-        //  JT_VBObox-lib.js file, in VBObox0.draw() function)
-        this.item[iNow].setIdent();                   // start in world coord axes
-        this.item[iNow].rayTranslate(1,1,1.3);        // move drawing axes 
-                                                    // RIGHT, BACK, & UP.
-        this.item[iNow].rayRotate(0.25*Math.PI, 1,0,0); // rot 45deg on x axis to face us
-        this.item[iNow].rayRotate(0.25*Math.PI, 0,0,1); // z-axis rotate 45deg.
-      
-        //-----Disk 2------ 
-        this.item.push(new CGeom(GeomShape.Disk));         // Append 2D disk to item[] &
-        iNow = this.item.length -1;                 // get its array index.
-        // set up distinctive coloring:
-        vec4.set(this.item[iNow].gapColor,  0.0,0.0,1.0,1.0); // RGBA(A==opacity) blue
-        vec4.set(this.item[iNow].lineColor, 1.0,1.0,0.0,1.0);  // yellow
-        // Now apply transforms to set disk's size, orientation, & position.
-        // (Be sure to do these same transforms in WebGL preview; find them in the
-        //  JT_VBObox-lib.js file, in VBObox0.draw() function)
-        this.item[iNow].setIdent();                   // start in world coord axes
-        this.item[iNow].rayTranslate(-1,1,1.3);         // move drawing axes 
-                                                        // LEFT, BACK, & UP.
-        this.item[iNow].rayRotate(0.75*Math.PI, 1,0,0); // rot 135 on x axis to face us
-        this.item[iNow].rayRotate(Math.PI/3, 0,0,1);    // z-axis rotate 60deg.
+        case 0:
+            // (default scene number; must create a 3D scene for ray-tracing
+            // create our list of CGeom shapes that fill our 3D scene:
 
-        //-----Sphere 1-----
-        this.item.push(new CGeom(GeomShape.Sphere));       // Append sphere to item[] &
-        iNow = this.item.length -1;                 // get its array index.
-        // Initially leave sphere at the origin. Once you see it, then
-        // move it to a more-sensible location:
-        this.item[iNow].setIdent();                   // start in world coord axes
-        this.item[iNow].rayTranslate(1.2,-1.0, 1.0);  // move rightwards (+x),
-        // and toward camera (-y) enough to stay clear of disks, and up by 1 to
-        // make this radius==1 sphere rest on gnd-plane.
-        //
-        //
-        // additional SCENE 0 SETUP   
-        //
-        //
-        break;
-    case 1:
-        //
-        //
-        // another: SCENE 1 SETUP   
-        console.log("JT_tracer0-Scene file: CScene.initScene(",num,") NOT YET IMPLEMENTED.");
-        this.initScene(0); // use default scene
-        //
-        //
-        break;
-    case 2:
-        //
-        //
-        // another: SCENE 2 SETUP   
-        console.log("JT_tracer0-Scene file: CScene.initScene(",num,") NOT YET IMPLEMENTED.");    //
-        this.initScene(0); // use default scene
-        //
-        break;
-    default:    // nonsensical 'sceneNum' value?
-        console.log("JT_tracer0-Scene file: CScene.initScene(",num,") NOT YET IMPLEMENTED.");
-        this.initScene(0);   // init the default scene.
-        break;
+            //---Ground Plane-----
+            // draw this in world-space; no transforms!
+            // Append gnd-plane to item[] array
+            this.item.push(new CGeom(GeomShape.GroundPlane));
+            // get its array index.
+            // use default colors.
+            // no transforms needed.
+            iNow = this.item.length -1;
+
+            //-----Disk 1------
+            // Append 2D disk to item[]
+            this.item.push(new CGeom(GeomShape.Disk));
+            // get its array index.
+            iNow = this.item.length -1;
+            // console.log('iNow should be 1; it is:', iNow);
+            
+            // set up distinctive coloring:
+            // bluish gray
+            vec4.set(this.item[iNow].gapColor,  0.3,0.6,0.7,1.0);
+            // muddy red
+            vec4.set(this.item[iNow].lineColor, 0.7,0.3,0.3,1.0);
+
+            // Now apply transforms to set disk's size, orientation, & position.
+            // (Be sure to do these same transforms in WebGL preview; find them in the
+            //  JT_VBObox-lib.js file, in VBObox0.draw() function)
+            // start in world coord axes
+            this.item[iNow].setIdent();
+            // move drawing axes 
+            // RIGHT, BACK, & UP.
+            this.item[iNow].rayTranslate(1,1,1.3);
+
+            this.item[iNow].rayRotate(0.25*Math.PI, 1,0,0); // rot 45deg on x axis to face us
+            this.item[iNow].rayRotate(0.25*Math.PI, 0,0,1); // z-axis rotate 45deg.
+      
+            //-----Disk 2------ 
+            // Append 2D disk to item[] &
+            this.item.push(new CGeom(GeomShape.Disk));
+            // get its array index.
+            iNow = this.item.length -1;
+
+            // set up distinctive coloring:
+            // Blue
+            vec4.set(this.item[iNow].gapColor,  0.0,0.0,1.0,1.0);
+            // yellow
+            vec4.set(this.item[iNow].lineColor, 1.0,1.0,0.0,1.0);
+
+            // Now apply transforms to set disk's size, orientation, & position.
+            // (Be sure to do these same transforms in WebGL preview; find them in the
+            //  JT_VBObox-lib.js file, in VBObox0.draw() function)
+            // start in world coord axes
+            this.item[iNow].setIdent();
+            // move drawing axes 
+            // LEFT, BACK, & UP.
+            this.item[iNow].rayTranslate(-1,1,1.3);
+
+            // rot 135 on x axis to face us
+            this.item[iNow].rayRotate(0.75*Math.PI, 1,0,0);
+            // z-axis rotate 60deg.
+            this.item[iNow].rayRotate(Math.PI/3, 0,0,1);
+
+            //-----Sphere 1-----
+            // Append sphere to item[]
+            this.item.push(new CGeom(GeomShape.Sphere));
+            // get its array index.
+            iNow = this.item.length -1;
+
+            // Initially leave sphere at the origin. Once you see it, then
+            // move it to a more-sensible location:
+            // start in world coord axes
+            this.item[iNow].setIdent();
+            // move rightwards (+x),
+            // and toward camera (-y) enough to stay clear of disks, and up by 1 to
+            // make this radius==1 sphere rest on gnd-plane.
+            this.item[iNow].rayTranslate(1.2,-1.0, 1.0);
+
+            break;
+        case 1:
+            //
+            //
+            // another: SCENE 1 SETUP   
+            console.log("JT_tracer0-Scene file: CScene.initScene(",num,") NOT YET IMPLEMENTED.");
+            this.initScene(0); // use default scene
+            //
+            //
+            break;
+        case 2:
+            //
+            //
+            // another: SCENE 2 SETUP   
+            console.log("JT_tracer0-Scene file: CScene.initScene(",num,") NOT YET IMPLEMENTED.");    //
+            this.initScene(0); // use default scene
+            //
+            break;
+        default:    // nonsensical 'sceneNum' value?
+            console.log("JT_tracer0-Scene file: CScene.initScene(",num,") NOT YET IMPLEMENTED.");
+            this.initScene(0);   // init the default scene.
+            break;
     }
 }
 
@@ -413,8 +417,8 @@ CScene.prototype.makeRayTracedImage = function()
     // just in case: this ensures our ray-tracer
     // will make an image that exactly fills the
     // currently-chosen output-image buffer.
-    // (usually g_myPic, but could have changed)    
-    this.setImgBuf(this.imgBuf);  
+    // (usually g_myPic, but could have changed)
+    this.setImgBuf(this.imgBuf);
 
     // floating-point RGBA color value
     var colr = vec4.create();
@@ -464,9 +468,11 @@ CScene.prototype.makeRayTracedImage = function()
                         ySamp = ySamp + (Math.random()/2)/this.ySuperSiz;
                     }
 
+                    // create an eye ray from camera to pixel
                     this.rayCam.setEyeRay(this.eyeRay,xSamp,ySamp);
-                    var bIsShadowRay = false;
-                    colr = this.traceRay(this.eyeRay, myHit, bIsShadowRay);
+
+                    // trace the generated ray and get color
+                    colr = this.traceRay(this.eyeRay, myHit);
 
                     // add the color to sum color for averaging
                     vec4.add(sumColr, sumColr, colr);
@@ -497,7 +503,7 @@ CScene.prototype.makeRayTracedImage = function()
     this.imgBuf.float2int();
 }
 
-CScene.prototype.traceRay = function(eyeRay, myHit, bIsShadowRay)
+CScene.prototype.traceRay = function(eyeRay, myHit)
 {
     // Trace a new eyeRay thru all CGeom items:
     // start by clearing our 'nearest hit-point'
@@ -506,7 +512,7 @@ CScene.prototype.traceRay = function(eyeRay, myHit, bIsShadowRay)
     {
         // for every CGeom in item[] array,
         // trace eyeRay thru it & keep nearest hit point in myHit.
-        this.item[k].traceMe(eyeRay, myHit, bIsShadowRay);
+        this.item[k].traceMe(eyeRay, myHit, false);
     }
 
     // Now get the color for this ray
@@ -529,7 +535,6 @@ CScene.prototype.findShade = function(myHit)
         vec4.copy(colr, this.blackShadow);
         return colr;
     }
-    // console.log("NOOO SHADOW");
 
     // Find eyeRay color from myHit
     if (myHit.hitNum == 0)
@@ -558,7 +563,6 @@ CScene.prototype.isInShadow = function(myHit, vSource, vDest)
 
     // generate the eye Ray
     this.rayCam.setEyeRaySourceToDest(this.eyeRay2, vSource, vDest);
-
 
     for(k=0; k< this.item.length; k++)
     {
