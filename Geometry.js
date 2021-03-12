@@ -570,9 +570,10 @@ CGeom.prototype.traceSphere = function(inRay, myHit, bIsShadowRay)
     vec4.normalize(myHit.viewN, myHit.viewN);
     
     // Now find surface normal: 
-    // in model space we know it's always +z,
+    // normal to sphere is the line from its origin to the point of intersection on surface
     // but we need to TRANSFORM the normal to world-space, & re-normalize it.
-    vec4.transformMat4(myHit.surfNorm, vec4.fromValues(0,0,1,0), this.normal2world);
+    vec4.subtract(myHit.surfNorm, myHit.modelHitPt, vec4.fromValues(0.0,0.0,0.0,1.0));
+    vec4.transformMat4(myHit.surfNorm, myHit.surfNorm, this.normal2world);
     vec4.normalize(myHit.surfNorm, myHit.surfNorm);
     
     // TEMPORARY: sphere color-setting
