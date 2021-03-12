@@ -562,14 +562,6 @@ CScene.prototype.findShade = function(eyeRay, myHit, recursionsLeft)
 
     // scale and add an epsilon
     vec4.scaleAndAdd(vSource, vSource, eyeRay.dir, -this.epsilon);
-    
-    if (true == this.isInShadow(myHit, vSource, vLightDir))
-    {
-        // console.log("SHADOW!!!!");
-        // in shadow region, return;
-        vec4.copy(colr, this.blackShadow);
-        return colr;
-    }
 
     // Find eyeRay color from myHit
     if (myHit.hitNum == 0)
@@ -584,6 +576,21 @@ CScene.prototype.findShade = function(eyeRay, myHit, recursionsLeft)
     else //if (myHit.hitNum == -1)
     {
         vec4.copy(colr, this.skyColor);
+    }
+
+    // add some ambient light:
+    var colrAmbient = vec4.fromValues(1.0,1.0,0.0,1.0);
+    vec4.scaleAndAdd(colr, colr, colrAmbient, 0.1);
+
+    if (true == this.isInShadow(myHit, vSource, vLightDir))
+    {
+        // console.log("SHADOW!!!!");
+        // in shadow region, return;
+        // keep some of the original color so that it does
+        // not appear completely black
+        vec4.lerp(colr, this.blackShadow, colr, 0.1);
+        // vec4.scaleAndAdd(colr, colr, colrAmbient, 0.2);
+        return colr;
     }
 
     // add diffused lighting code:
