@@ -553,16 +553,6 @@ CScene.prototype.findShade = function(eyeRay, myHit, recursionsLeft)
 
     var colr = vec4.create();
 
-    // for shadows:
-    // Light position will be destination
-    // TODO: for now, assume a light position
-    var vLightDir = vec4.fromValues(-15.0, -15.0, 15.0, 1.0);
-    // hit point will be the source
-    var vSource = myHit.hitPt;
-
-    // scale and add an epsilon
-    vec4.scaleAndAdd(vSource, vSource, eyeRay.dir, -this.epsilon);
-
     // Find eyeRay color from myHit
     if (myHit.hitNum == 0)
     {
@@ -579,8 +569,18 @@ CScene.prototype.findShade = function(eyeRay, myHit, recursionsLeft)
     }
 
     // add some ambient light:
-    var colrAmbient = vec4.fromValues(1.0,1.0,0.0,1.0);
+    var colrAmbient = vec4.fromValues(0.5,0.5,0.0,1.0);
     vec4.scaleAndAdd(colr, colr, colrAmbient, 0.1);
+
+    // for shadows:
+    // Light position will be destination
+    // TODO: for now, assume a light position
+    var vLightDir = vec4.fromValues(-15.0, -15.0, 15.0, 1.0);
+    // hit point will be the source
+    var vSource = myHit.hitPt;
+
+    // scale and add an epsilon
+    vec4.scaleAndAdd(vSource, vSource, eyeRay.dir, -this.epsilon);    
 
     if (true == this.isInShadow(myHit, vSource, vLightDir))
     {
@@ -593,7 +593,7 @@ CScene.prototype.findShade = function(eyeRay, myHit, recursionsLeft)
         return colr;
     }
 
-    // add diffused lighting code:
+    // add diffused lighting:
     var colrDiff = vec4.fromValues(1.0, 1.0, 1.0, 1.0);
     var vLightDirNorm = vec4.create();
     vec4.normalize(vLightDirNorm, vLightDir);
@@ -601,7 +601,22 @@ CScene.prototype.findShade = function(eyeRay, myHit, recursionsLeft)
     if (colrDiffMag >0)
     {
         vec4.scale(colrDiff, colrDiff, colrDiffMag);
-        vec4.scaleAndAdd(colr, colr, colrDiff, 0.4);
+        vec4.scaleAndAdd(colr, colr, colrDiff, 0.1);
+    }
+
+    // add specular lighting:
+    var colrSpec = vec4.fromValues(1.0, 1.0, 1.0, 1.0);
+    // get the halfway vector first
+    // H = -ray.dir + light.dir
+    var H = vec4.create();
+    vec4.subtract(H, vLightDir, eyeRay.dir);
+    vec4.normalize(H, H);
+    var specMag = vec4.dot(myHit.surfNorm, H);
+    if (specMag > 0)
+    {
+        specMag = Math.pow(specMag, 6);
+        vec4.scale(colrSpec, colrSpec, specMag);
+        vec4.scaleAndAdd(colr, colr, colrSpec, 0.8);
     }
 
     // for reflections:
