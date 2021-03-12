@@ -253,6 +253,15 @@ CCamera.prototype.setEyeRaySourceToDest = function(myeRay, mySource, myDest)
     vec4.copy(myeRay.dir, vDir);
 }
 
+CCamera.prototype.setEyeRaySourceInDir = function(myeRay, mySource, myDir)
+{
+    // set Ray origin
+    vec4.copy(myeRay.orig, mySource);
+
+    // set Ray direction
+    vec4.copy(myeRay.dir, myDir);
+}
+
 CCamera.prototype.printMe = function()
 {
     // print CCamera object's current contents in console window:

@@ -241,11 +241,17 @@ function CScene()
     // (initializing globally to avoid regeneration every time)
     this.eyeRay2 = new CRay();
 
-    this.rayCam = new CCamera();	    // the 3D camera that sets eyeRay values:
-                                    // this is the DEFAULT camera (256,256).
-                                    // (change it with setImgBuf() if needed)
-    this.item = [];                   // this JavaScript array holds all the
-                                    // CGeom objects of the  current scene.
+    // the 3D camera that sets eyeRay values:
+    // this is the DEFAULT camera (256,256).
+    // (change it with setImgBuf() if needed)
+    this.rayCam = new CCamera();
+
+    // this JavaScript array holds all the
+    // CGeom objects of the  current scene.
+    this.item = [];
+
+    // maximum reflection bounces that we need for recursive tracing
+    this.ReflectionBounces = 3;
 }
 
 CScene.prototype.setImgBuf = function(nuImg)
@@ -488,7 +494,7 @@ CScene.prototype.makeRayTracedImage = function()
                     this.rayCam.setEyeRay(this.eyeRay,xSamp,ySamp);
 
                     // trace the generated ray and get color
-                    colr = this.traceRay(this.eyeRay, myHit);
+                    colr = this.traceRay(this.eyeRay, myHit, this.ReflectionBounces);
 
                     // add the color to sum color for averaging
                     vec4.add(sumColr, sumColr, colr);
@@ -508,8 +514,10 @@ CScene.prototype.makeRayTracedImage = function()
     this.imgBuf.float2int();
 }
 
-CScene.prototype.traceRay = function(eyeRay, myHit)
+CScene.prototype.traceRay = function(eyeRay, myHit, recursionsLeft)
 {
+    if (recursionsLeft < 1) return 0;
+
     if (this.pixFlag == 1)
     {
         console.log("Inside traceRay");
@@ -533,10 +541,10 @@ CScene.prototype.traceRay = function(eyeRay, myHit)
     }
 
     // Now get the color for this ray
-    return this.findShade(eyeRay, myHit);
+    return this.findShade(eyeRay, myHit, recursionsLeft);
 }
 
-CScene.prototype.findShade = function(eyeRay, myHit)
+CScene.prototype.findShade = function(eyeRay, myHit, recursionsLeft)
 {
     if (this.pixFlag == 1)
     {
@@ -548,14 +556,14 @@ CScene.prototype.findShade = function(eyeRay, myHit)
     // for shadows:
     // Light position will be destination
     // TODO: for now, assume a light position
-    var vDest = vec4.fromValues(-15.0, -15.0, 15.0, 1.0);
+    var vLightDir = vec4.fromValues(-15.0, -15.0, 15.0, 1.0);
     // hit point will be the source
     var vSource = myHit.hitPt;
 
     // scale and add an epsilon
     vec4.scaleAndAdd(vSource, vSource, eyeRay.dir, -this.epsilon);
     
-    if (true == this.isInShadow(myHit, vSource, vDest))
+    if (true == this.isInShadow(myHit, vSource, vLightDir))
     {
         // console.log("SHADOW!!!!");
         // in shadow region, return;
@@ -578,7 +586,61 @@ CScene.prototype.findShade = function(eyeRay, myHit)
         vec4.copy(colr, this.skyColor);
     }
 
+    // add diffused lighting code:
+    /*var colrDiff = vec4.fromValues(1.0, 1.0, 1.0, 1.0);
+    var vLightDirNorm = vec3.create();
+    vec3.normalize(vLightDirNorm, vLightDir);
+    var colrDiffMag = vec3.dot(myHit.surfNorm, vLightDirNorm);
+    if (colrDiffMag >0)
+    {
+        vec4.scale(colrDiff, colrDiff, colrDiffMag);
+        vec4.scaleAndAdd(colr, colr, colrDiff, 1.0);
+    }*/
+
+    // for reflections:
+    // get normal direction first
+    var vNormal = vec4.create();
+    vec4.copy(vNormal, myHit.surfNorm);
+    // then get reflected ray direction:
+
+    // C = (L.N)N
+    var C = vec4.create();
+    var Clen = vec4.dot(eyeRay.dir, vNormal);
+    vec4.scale(C, vNormal, -Clen);
+
+    // R = 2C - L
+    // here, L = -eye.dir
+    // So -L + 2C = eye.dir + 2C
+    var R = vec4.create();
+    vec4.scaleAndAdd(R, eyeRay.dir, C, 2);
+
+    // that will be the direction for our new light ray
+
+
+    // For now: TEMP DIR
+    var vDir = C;
+    // hit point will be the source
+    var vSource = myHit.hitPt;
+
+    // generate the eye Ray
+    this.rayCam.setEyeRaySourceInDir(this.eyeRay2, vSource, vDir);
+
+    var colrRec = vec4.create();
+
+    // decrease the recursions left count
+    recursionsLeft -= 1;
+    // if no more recursions to be done, return
+    if (recursionsLeft < 1) return colr;
+
+    // initialized the hit point object
+    // we don't need the old hit points for the recursive tracing now
+    myHit.init();
+    // call the ray tracing function again
+    colrRec = this.traceRay(this.eyeRay2, myHit, recursionsLeft);
+
     // vec4.lerp(out, a, b, t) => out = a + t * (b - a);
+    // vec4.lerp(colr, colr, colrRec, 0.4);
+    vec4.scaleAndAdd(colr, colr, colrRec, 0.4);
 
     return colr;
 }
