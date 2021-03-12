@@ -587,15 +587,15 @@ CScene.prototype.findShade = function(eyeRay, myHit, recursionsLeft)
     }
 
     // add diffused lighting code:
-    /*var colrDiff = vec4.fromValues(1.0, 1.0, 1.0, 1.0);
-    var vLightDirNorm = vec3.create();
-    vec3.normalize(vLightDirNorm, vLightDir);
-    var colrDiffMag = vec3.dot(myHit.surfNorm, vLightDirNorm);
+    var colrDiff = vec4.fromValues(1.0, 1.0, 1.0, 1.0);
+    var vLightDirNorm = vec4.create();
+    vec4.normalize(vLightDirNorm, vLightDir);
+    var colrDiffMag = vec4.dot(myHit.surfNorm, vLightDirNorm);
     if (colrDiffMag >0)
     {
         vec4.scale(colrDiff, colrDiff, colrDiffMag);
-        vec4.scaleAndAdd(colr, colr, colrDiff, 1.0);
-    }*/
+        vec4.scaleAndAdd(colr, colr, colrDiff, 0.4);
+    }
 
     // for reflections:
     // get normal direction first
