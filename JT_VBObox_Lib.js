@@ -836,8 +836,12 @@ VBObox0.prototype.draw = function() {
                   this.bgnSphere - this.bgnDisk);  // How many vertices to draw
 
   // 3)--------------------copy transforms for Sphere 1 in CScene.initScene(0)
-  mat4.copy(this.mvpMat, tmp); // RESTORE current value (needs push-down stack!)
-  mat4.translate(this.mvpMat, this.mvpMat, vec3.fromValues(1.2, -1.0, 1.0));
+  // RESTORE current value (needs push-down stack!)
+  mat4.copy(this.mvpMat, tmp);
+  mat4.translate(this.mvpMat, this.mvpMat, vec3.fromValues(3.0, -2.0, 2.0));
+
+  mat4.scale(this.mvpMat, this.mvpMat, vec3.fromValues(1.0, 1.0, 2.0));
+
   // Send  new 'ModelMat' values to the GPU's 'u_ModelMat1' uniform: 
   gl.uniformMatrix4fv(this.u_mvpMatLoc,	// GPU location of the uniform
   										false, 				// use matrix transpose instead?

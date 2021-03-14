@@ -1,7 +1,8 @@
 /*******************************************************************
- * File: Scene.js
- * Author: Aniket Dashpute
- * Credits: Built from starter code by Prof. Jack Tumblin
+ * @file: Scene.js
+ * @author: Aniket Dashpute
+ * Credits: Built from starter code by
+ * @author: Prof. Jack Tumblin
  * Northwestern University
 *******************************************************************/
 
@@ -9,7 +10,7 @@
 //  --a straightforward method to implement scene graphs & jointed objects. 
 //		Do it by transforming world-space rays to model coordinates, rather than 
 //		models to world coords, using a 4x4 worl2model matrix stored in each 
-//		model (each CGeom primitive).  Set it by OpenGL-like functions 
+//		model (each CGeom primitive). Set it by OpenGL-like functions 
 //		rayTranslate(), rayRotate(), rayScale(), etc.
 //  --the need to describe geometry/shape independently from surface materials,
 //		and to select material(s) for each shape from a list of materials;
@@ -19,9 +20,6 @@
 //  --need to create a sortable LIST of ray/object hit-points, and not just
 //		the intersection nearest to the eyepoint, to enable shape-creation by
 //		Constructive Solid Geometry (CSG), alpha-blending, & ray root-finding.
-//  --functions organized well to permit easy recursive ray-tracing:  don't 
-//		tangle together ray/object intersection-finding tasks with shading, 
-//		lighting, and materials-describing tasks.(e.g. traceRay(), findShade() )
 
 /*
 -----------ORGANIZATION:-----------
@@ -55,101 +53,121 @@ When users press the 'T' or 't' key (see GUIbox method gui.keyPress() ),
 
 var g_t0_MAX = 1.23E16;  // 'sky' distance; approx. farthest-possible hit-point.
 
+/**
+ * @class Ray/Object Intersection - Hit Point
+ * @name CHit
+ * 
+ * @description
+ * Describes one ray/object intersection point that was found by 'tracing' one
+ * ray through one shape (through a single CGeom object, held in the
+ * CScene.item[] array).
+ * CAREFUL! We don't use isolated CHit objects, but instead gather all the CHit
+ * objects for one ray in one list held inside a CHitList object.
+ * (CHit, CHitList classes are consistent with the 'HitInfo' and 'Intersection'
+ * classes described in FS Hill, pg 746).
+ */
 function CHit()
 {
-//=============================================================================
-// Describes one ray/object intersection point that was found by 'tracing' one
-// ray through one shape (through a single CGeom object, held in the
-// CScene.item[] array).
-// CAREFUL! We don't use isolated CHit objects, but instead gather all the CHit
-// objects for one ray in one list held inside a CHitList object.
-// (CHit, CHitList classes are consistent with the 'HitInfo' and 'Intersection'
-// classes described in FS Hill, pg 746).
+    // (reference to)the CGeom object we pierced in
+    // in the CScene.item[] array (null if 'none').
+    // NOTE: CGeom objects describe their own
+    // materials and coloring (e.g. CMatl).
+    this.hitGeom = null;
 
-    this.hitGeom = null;        // (reference to)the CGeom object we pierced in
-                                //  in the CScene.item[] array (null if 'none').
-                                // NOTE: CGeom objects describe their own
-                                // materials and coloring (e.g. CMatl).
+
     // TEMPORARY: replaces traceGrid(),traceDisk() return value
     this.hitNum = -1; // SKY color
 
-    this.t0 = g_t0_MAX;         // 'hit time' parameter for the ray; defines one
-                                // 'hit-point' along ray:   orig + t*dir = hitPt.
-                                // (default: t set to hit very-distant-sky)
-    this.hitPt = vec4.create(); // World-space location where the ray pierced
-                                // the surface of a CGeom item.
-    this.surfNorm = vec4.create();  // World-space surface-normal vector at the 
-                                //  point: perpendicular to surface.
-    this.viewN = vec4.create(); // Unit-length vector from hitPt back towards
-                                // the origin of the ray we traced.  (VERY
-                                // useful for Phong lighting, etc.)
-    this.isEntering=true;       // true iff ray origin was OUTSIDE the hitGeom.
-                                //(example; transparency rays begin INSIDE).
-                                
-    this.modelHitPt = vec4.create(); // the 'hit point' in model coordinates.
-    // *WHY* have modelHitPt? to evaluate procedural textures & materials.
-    //      Remember, we define each CGeom objects as simply as possible in its
-    // own 'model' coordinate system (e.g. fixed, unit size, axis-aligned, and
-    // centered at origin) and each one uses its own worldRay2Model matrix
-    // to customize them in world space.  We use that matrix to translate,
-    // rotate, scale or otherwise transform the object in world space.
-    // This means we must TRANSFORM rays from the camera's 'world' coord. sys.
-    // to 'model' coord sys. before we trace the ray.  We find the ray's
-    // collision length 't' in model space, but we can use it on the world-
-    // space rays to find world-space hit-point as well.
-    //      However, some materials and shading methods work best in model
+    // 'hit time' parameter for the ray; defines one
+    // 'hit-point' along ray: orig + t*dir = hitPt.
+    // (default: t set to hit very-distant-sky)
+    this.t0 = g_t0_MAX;
+
+    // World-space location where the ray pierced
+    // the surface of a CGeom item.
+    this.hitPt = vec4.create();
+
+    // World-space surface-normal vector at the 
+    // point: perpendicular to surface.
+    this.surfNorm = vec4.create();
+
+    // Unit-length vector from hitPt back towards
+    // the origin of the ray we traced. (VERY
+    // useful for Phong lighting, etc.)
+    this.viewN = vec4.create();
+
+    // true iff ray origin was OUTSIDE the hitGeom.
+    //(example; transparency rays begin INSIDE).
+    this.isEntering=true;
+
+    // Some materials and shading methods work best in model
     // coordinates too; for example, if we evaluate procedural textures
     // (grid-planes, checkerboards, 3D woodgrain textures) in the 'model'
     // instead of the 'world' coord system, they'll stay 'glued' to the CGeom
     // object as we move it around in world-space (by changing worldRay2Model
     // matrix), and the object's surface patterns won't change if we 'squeeze' 
     // or 'stretch' it by non-uniform scaling.
-    this.colr = vec4.clone(g_myScene.skyColor);   // set default as 'sky'
-                                // The final color we computed for this point,
-                                // (note-- not used for shadow rays).
-                                // (uses RGBA. A==opacity, default A=1=opaque.
+    this.modelHitPt = vec4.create();
+
+    // set default as 'sky'
+    // The final color we computed for this point,
+    this.colr = vec4.clone(g_myScene.skyColor);
 }
 
 CHit.prototype.init  = function()
 {
-    //==============================================================================
     // Set this CHit object to describe a 'sky' ray that hits nothing at all;
     // clears away all CHit's previously-stored description of any ray hit-point.
-    this.hitGeom = -1;            // (reference to)the CGeom object we pierced in
-                                //  in the CScene.item[] array (null if 'none').
-    this.hitNum = -1; // TEMPORARY:
-    // holds traceGrid() or traceDisk() result.
+    
+    // (reference to) the CGeom object we pierced in
+    //  in the CScene.item[] array (null if 'none').
+    this.hitGeom = -1;
 
-    this.t0 = g_t0_MAX;           // 'hit time' for the ray; defines one
-                                // 'hit-point' along ray:   orig + t*dir = hitPt.
-                                // (default: giant distance to very-distant-sky)
-    vec4.set(this.hitPt, this.t0, 0,0,1); // Hit-point: the World-space location 
-                                //  where the ray pierce surface of CGeom item.
-    vec4.set(this.surfNorm,-1,0,0,0);  // World-space surface-normal vector 
-                                // at the hit-point: perpendicular to surface.
-    vec4.set(this.viewN,-1,0,0,0);// Unit-length vector from hitPt back towards
-                                // the origin of the ray we traced.  (VERY
-                                // useful for Phong lighting, etc.)
-    this.isEntering=true;         // true iff ray origin was OUTSIDE the hitGeom.
-                                //(example; transparency rays begin INSIDE).                                
-    vec4.copy(this.modelHitPt,this.hitPt);// the 'hit point' in model coordinates.
+    // TEMPORARY:
+    // holds traceGrid() or traceDisk() result.
+    this.hitNum = -1;
+
+    // 'hit time' for the ray; defines one
+    // 'hit-point' along ray:   orig + t*dir = hitPt.
+    // (default: giant distance to very-distant-sky)
+    this.t0 = g_t0_MAX;
+
+    // Hit-point: the World-space location
+    // where the ray pierce surface of CGeom item.
+    vec4.set(this.hitPt, this.t0, 0,0,1);
+
+    // World-space surface-normal vector
+    // at the hit-point: perpendicular to surface.
+    vec4.set(this.surfNorm,-1,0,0,0);
+
+    // Unit-length vector from hitPt back towards
+    // the origin of the ray we traced.  (VERY
+    // useful for Phong lighting, etc.)
+    vec4.set(this.viewN,-1,0,0,0);
+
+    // true iff ray origin was OUTSIDE the hitGeom.
+    //(example; transparency rays begin INSIDE).
+    this.isEntering=true;
+
+    // the 'hit point' in model coordinates.
+    vec4.copy(this.modelHitPt,this.hitPt);
 }
- 
+
 
 function CHitList()
 {
-//=============================================================================
-// Holds ALL ray/object intersection results from tracing a single ray(CRay)
-// sent through ALL shape-defining objects (CGeom) in in the item[] array in 
-// our scene (CScene).  A CHitList object ALWAYS holds at least one valid CHit 
-// 'hit-point', as we initialize the pierce[0] object to the CScene's 
-//  background color.  Otherwise, each CHit element in the 'pierce[]' array
-// describes one point on the ray where it enters or leaves a CGeom object.
-// (each point is in front of the ray, not behind it; t>0).
-//  -- 'iEnd' index selects the next available CHit object at the end of
-//      our current list in the pierce[] array. if iEnd=0, the list is empty.
-//  -- 'iNearest' index selects the CHit object nearest the ray's origin point.
-	//
+    // Holds ALL ray/object intersection results from tracing a single ray(CRay)
+    // sent through ALL shape-defining objects (CGeom) in in the item[] array in 
+    // our scene (CScene).  A CHitList object ALWAYS holds at least one valid CHit 
+    // 'hit-point', as we initialize the pierce[0] object to the CScene's 
+    //  background color.  Otherwise, each CHit element in the 'pierce[]' array
+    // describes one point on the ray where it enters or leaves a CGeom object.
+    // (each point is in front of the ray, not behind it; t>0).
+    //  -- 'iEnd' index selects the next available CHit object at the end of
+    //      our current list in the pierce[] array. if iEnd=0, the list is empty.
+    //  -- 'iNearest' index selects the CHit object nearest the ray's origin point.
+	
+    //
 	//
 	//
 	//
@@ -256,14 +274,13 @@ function CScene()
 
 CScene.prototype.setImgBuf = function(nuImg)
 {
-    //==============================================================================
-    // set/change the CImgBuf object we will fill with our ray-traced image.
-    // This is USUALLY the global 'g_myPic', but could be any CImgBuf of any
-    // size.  
+    // set/change the CImgBuf object we will fill with our ray-traced image
+    // This is USUALLY the global 'g_myPic', but could be any CImgBuf of any size
 
     // Re-adjust ALL the CScene methods/members affected by output image size:
     this.rayCam.setSize(nuImg.xSiz, nuImg.ySiz);
-    this.imgBuf = nuImg;    // set our ray-tracing image destination.
+    // set our ray-tracing image destination.
+    this.imgBuf = nuImg;
 }
 
 CScene.prototype.initScene = function(num)
@@ -383,7 +400,9 @@ CScene.prototype.initScene = function(num)
             // move rightwards (+x),
             // and toward camera (-y) enough to stay clear of disks, and up by 1 to
             // make this radius==1 sphere rest on gnd-plane.
-            this.item[iNow].rayTranslate(1.2,-1.0, 1.0);
+            this.item[iNow].rayTranslate(3.0, -2.0, 2.0);
+            // make an ellipsoid from the sphere
+            this.item[iNow].rayScale(1.0, 1.0, 2.0);
 
             break;
         case 1:
