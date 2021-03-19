@@ -236,6 +236,7 @@ CCamera.prototype.setEyeRay = function(myeRay, xpos, ypos)
     // myeRay.dir = (xyzPos + eyePt) - eyePt = xyzPos; thus
 	vec4.copy(myeRay.orig, this.eyePt);
 	vec4.copy(myeRay.dir, xyzPos);
+    vec3.normalize(myeRay.dir, myeRay.dir);
     //  console.log('in CCamera.makeEyeRay(): this.eyePt:', this.eyePt);
 
 }
@@ -251,6 +252,7 @@ CCamera.prototype.setEyeRaySourceToDest = function(myeRay, mySource, myDest)
 
     // set Ray direction (not normalized)
     vec4.copy(myeRay.dir, vDir);
+    vec3.normalize(myeRay.dir, myeRay.dir);
 }
 
 CCamera.prototype.setEyeRaySourceInDir = function(myeRay, mySource, myDir)
@@ -260,6 +262,7 @@ CCamera.prototype.setEyeRaySourceInDir = function(myeRay, mySource, myDir)
 
     // set Ray direction
     vec4.copy(myeRay.dir, myDir);
+    vec3.normalize(myeRay.dir, myeRay.dir);
 }
 
 CCamera.prototype.printMe = function()

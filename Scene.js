@@ -321,6 +321,34 @@ CScene.prototype.initScene = function(num)
     switch(num)
     {
         case 0:
+            //---Ground Plane-----
+            // draw this in world-space; no transforms!
+            // Append gnd-plane to item[] array
+            this.item.push(new CGeom(GeomShape.GroundPlane));
+            // get its array index.
+            // use default colors.
+            // no transforms needed.
+            iNow = this.item.length -1;
+
+            //-----Sphere 2-----
+            // Append sphere to item[]
+            this.item.push(new CGeom(GeomShape.SphereImplicit));
+            // get its array index
+            iNow = this.item.length -1;
+
+            // Initially leave sphere at the origin. Once you see it, then
+            // move it to a more-sensible location:
+            // start in world coord axes
+            this.item[iNow].setIdent();
+            // move rightwards (+x),
+            // and toward camera (-y) enough to stay clear of disks, and up by 1 to
+            // make this radius==1 sphere rest on gnd-plane.
+            this.item[iNow].rayTranslate(0.0, -1.5, 2.0);
+            // make an ellipsoid from the sphere
+            this.item[iNow].rayScale(1.0, 1.0, 1.0);
+            this.item[iNow].rayRotate(0.4*Math.PI, 1,0,0);
+            break;
+        case 1:
             // (default scene number; must create a 3D scene for ray-tracing
             // create our list of CGeom shapes that fill our 3D scene:
 
@@ -417,18 +445,23 @@ CScene.prototype.initScene = function(num)
             // move rightwards (+x),
             // and toward camera (-y) enough to stay clear of disks, and up by 1 to
             // make this radius==1 sphere rest on gnd-plane.
-            this.item[iNow].rayTranslate(-3.0, -2.0, 2.0);
+            this.item[iNow].rayTranslate(0.0, -1.5, 2.0);
             // make an ellipsoid from the sphere
             this.item[iNow].rayScale(1.0, 1.0, 1.0);
-            break;
-        case 1:
-            //
-            //
-            // another: SCENE 1 SETUP   
-            console.log("JT_tracer0-Scene file: CScene.initScene(",num,") NOT YET IMPLEMENTED.");
-            this.initScene(0); // use default scene
-            //
-            //
+            this.item[iNow].rayRotate(0.4*Math.PI, 1,0,0);
+
+            //-----Cylinder-----
+            // Append sphere to item[]
+            this.item.push(new CGeom(GeomShape.CylinderImplicit));
+            // get its array index
+            iNow = this.item.length -1;
+
+            // Initially leave sphere at the origin. Once you see it, then
+            // move it to a more-sensible location:
+            // start in world coord axes
+            this.item[iNow].setIdent(); 
+            this.item[iNow].rayTranslate(-2.0, -2.0, 2.0);
+            // rot 135 on x axis to face us
             break;
         case 2:
             //

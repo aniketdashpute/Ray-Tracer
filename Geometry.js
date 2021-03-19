@@ -25,6 +25,10 @@ const GeomShape = {
     Blobby: 6,
     // Implicit sphere
     SphereImplicit: 7,
+    // Implicit square
+    SquareImplicit: 8,
+    // Implicit cylinder,
+    CylinderImplicit: 9,
 }
 
 function CGeom(shapeSelect)
@@ -98,8 +102,13 @@ function CGeom(shapeSelect)
             break;
         case GeomShape.SphereImplicit:
             //set the ray-tracing function (so we call it using item[i].traceMe() )
-            this.traceMe = function(inR,hit,bIsShadowRay) { return this.traceSphereImp(inR,hit, bIsShadowRay); }; 
+            this.traceMe = function(inR,hit,bIsShadowRay) { return this.SphereTrace(inR,hit, bIsShadowRay); }; 
             this.lineColor = vec4.fromValues(1.0,0.0,0.0,1.0);
+            break;
+        case GeomShape.CylinderImplicit:
+            //set the ray-tracing function (so we call it using item[i].traceMe() )
+            this.traceMe = function(inR,hit,bIsShadowRay) { return this.SphereTrace(inR,hit, bIsShadowRay); }; 
+            this.lineColor = vec4.fromValues(0.5,0.5,0.5,1.0);
             break;
         default:
             console.log("CGeom() constructor: ERROR! INVALID shapeSelect:", shapeSelect);
@@ -621,7 +630,7 @@ CGeom.prototype.traceSphere = function(inRay, myHit, bIsShadowRay)
  * @description took help of pseduocode provided here:
  * https://www.scratchapixel.com/lessons/advanced-rendering/rendering-distance-fields/basic-sphere-tracer
  */
-CGeom.prototype.traceSphereImp = function(inRay, myHit, bIsShadowRay)
+CGeom.prototype.SphereTrace = function(inRay, myHit, bIsShadowRay)
 { 
     // DIAGNOSTIC
     // did we reach the one 'flagged' pixel
@@ -642,7 +651,7 @@ CGeom.prototype.traceSphereImp = function(inRay, myHit, bIsShadowRay)
     vec4.transformMat4(rayT.dir,  inRay.dir,  this.worldRay2model);
 
     var maxDistance = 100;
-    var threshold = 1.0E-6;
+    var threshold = 1.0E-8;
     var numStpes = 0;
     var t = 0;
 
@@ -658,7 +667,10 @@ CGeom.prototype.traceSphereImp = function(inRay, myHit, bIsShadowRay)
         switch(this.shapeType)
         {
             case GeomShape.SphereImplicit:
-                d = this.getSphereSDF(currPt);
+                d = Math.max(this.getSphereSDF(currPt), -this.getCylinderSDF(currPt));
+                break;
+            case GeomShape.CylinderImplicit:
+                d = this.getCylinderSDF(currPt);
                 break;
             default:
                 break;
@@ -667,6 +679,11 @@ CGeom.prototype.traceSphereImp = function(inRay, myHit, bIsShadowRay)
         if (d < threshold*t) // we have an intersection!
         {
             {
+            if(t > myHit.t0)
+            {
+                // NO.  DON'T change myHit, don't do any further calcs. Bye!
+                return true;
+            }
             // Update myHit to describe it
             // record ray-length, and
             myHit.t0 = t;
@@ -728,6 +745,48 @@ CGeom.prototype.getSphereSDF = function(fromPoint)
 {
     // center = origin (0,0,0)
     // radius = 1.0
-    f = vec3.length(fromPoint) - 1.0;
+    var distP2C = vec4.create();
+    vec4.subtract(distP2C, fromPoint, vec4.fromValues(0.0, 0.0, 0.0, 1.0));
+    f = vec4.length(distP2C) - 1.0;
     return f;
+}
+
+CGeom.prototype.getCylinderSDF = function(fromPoint)
+{
+    // get the distance of the point from the z axis
+    // subtract the value of radius from that distance
+    // center = origin (0,0,0)
+    // centre-axis = z-axis
+    // radius = 1.0
+
+    //if (fromPoint[3] < 1 || fromPoint >)
+
+    // distance from axis
+    // vec2.length(xyzw) -> sqrt(x^2 + y^2)
+    f1 = vec2.length(fromPoint) - 0.5;
+
+    // distance from end 1 (z = 1.0)
+    f2 = fromPoint[2] - 1.0;
+
+    // distance from end 2 (z = -1.0)
+    f3 = -1.0 - fromPoint[2];
+
+    // case 1: inside the length of cylinder
+    if (f2 < 0 && f3 < 0)
+    {
+        return f1;
+    }
+    // case 2: inside the radial distance
+    var f = Math.max(f2, f3);
+    if (f1 < 0)
+    {
+        // return the one which has positive value
+        // (will also be max of the 2)
+        return f;
+    }
+    // case 3: outside the radial and length both
+    else
+    {
+        return Math.sqrt(f*f + f1*f1);
+    }
 }
