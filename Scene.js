@@ -404,6 +404,22 @@ CScene.prototype.initScene = function(num)
             // make an ellipsoid from the sphere
             this.item[iNow].rayScale(1.0, 1.0, 2.0);
 
+            //-----Sphere 2-----
+            // Append sphere to item[]
+            this.item.push(new CGeom(GeomShape.SphereImplicit));
+            // get its array index
+            iNow = this.item.length -1;
+
+            // Initially leave sphere at the origin. Once you see it, then
+            // move it to a more-sensible location:
+            // start in world coord axes
+            this.item[iNow].setIdent();
+            // move rightwards (+x),
+            // and toward camera (-y) enough to stay clear of disks, and up by 1 to
+            // make this radius==1 sphere rest on gnd-plane.
+            this.item[iNow].rayTranslate(-3.0, -2.0, 2.0);
+            // make an ellipsoid from the sphere
+            this.item[iNow].rayScale(1.0, 1.0, 1.0);
             break;
         case 1:
             //
@@ -422,7 +438,7 @@ CScene.prototype.initScene = function(num)
             this.initScene(0); // use default scene
             //
             break;
-        default:    // nonsensical 'sceneNum' value?
+        default: // nonsensical 'sceneNum' value?
             console.log("JT_tracer0-Scene file: CScene.initScene(",num,") NOT YET IMPLEMENTED.");
             this.initScene(0);   // init the default scene.
             break;

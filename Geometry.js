@@ -23,6 +23,8 @@ const GeomShape = {
     Triangle: 5,
     // Implicit surface:Blinn-style Gaussian 'blobbies'
     Blobby: 6,
+    // Implicit sphere
+    SphereImplicit: 7,
 }
 
 function CGeom(shapeSelect)
@@ -93,6 +95,11 @@ function CGeom(shapeSelect)
         case GeomShape.Blobby:
             //set the ray-tracing function (so we call it using item[i].traceMe() )
             this.traceMe = function(inR,hit) { this.traceBlobby(inR,hit); }; 
+            break;
+        case GeomShape.SphereImplicit:
+            //set the ray-tracing function (so we call it using item[i].traceMe() )
+            this.traceMe = function(inR,hit,bIsShadowRay) { return this.traceSphereImp(inR,hit, bIsShadowRay); }; 
+            this.lineColor = vec4.fromValues(1.0,0.0,0.0,1.0);
             break;
         default:
             console.log("CGeom() constructor: ERROR! INVALID shapeSelect:", shapeSelect);
@@ -602,4 +609,116 @@ CGeom.prototype.traceSphere = function(inRay, myHit, bIsShadowRay)
     //  Use the t1 hit point, as only t1 is AHEAD of the ray's origin.
 
     return true;
+}
+
+
+
+/**
+ * @param {CRay} inRay 
+ * @param {CHit} myHit 
+ * @param {boolean} bIsShadowRay 
+ * @returns {boolean} true if in shadow, false otherwise
+ * @description took help of pseduocode provided here:
+ * https://www.scratchapixel.com/lessons/advanced-rendering/rendering-distance-fields/basic-sphere-tracer
+ */
+CGeom.prototype.traceSphereImp = function(inRay, myHit, bIsShadowRay)
+{ 
+    // DIAGNOSTIC
+    // did we reach the one 'flagged' pixel
+    // chosen in CScene.makeRayTracedImage()?
+    // if(g_myScene.pixFlag ==1)
+    // {
+    //     // YES!
+    //     console.log("you called CGeom.traceSphere");
+    // }
+    // END DIAGNOSTIC
+    
+    vec4.normalize(inRay.dir, inRay.dir);
+    
+    var rayT = new CRay();
+    vec4.copy(rayT.orig, inRay.orig);
+    vec4.copy(rayT.dir, inRay.dir);
+    vec4.transformMat4(rayT.orig, inRay.orig, this.worldRay2model);
+    vec4.transformMat4(rayT.dir,  inRay.dir,  this.worldRay2model);
+
+    var maxDistance = 100;
+    var threshold = 1.0E-6;
+    var numStpes = 0;
+    var t = 0;
+
+    while (t < maxDistance)
+    {
+        // get the current location from t, orig and dir
+        var currPt = vec4.create();
+        vec4.scaleAndAdd(currPt, rayT.orig, rayT.dir, t);
+
+        // get the SDF for the sphere
+        var d = this.getSphereSDF(currPt);
+
+        if (d < threshold*t) // we have an intersection!
+        {
+            {
+            // Update myHit to describe it
+            // record ray-length, and
+            myHit.t0 = t;
+            // record this CGeom object as the one we hit, and
+            myHit.hitGeom = this;
+            
+            // Compute the point where rayT hit the sphere in MODEL coords:
+            // vec4.scaleAndAdd(out,a,b,scalar) sets out = a + b*scalar
+            vec4.scaleAndAdd(myHit.modelHitPt, rayT.orig, rayT.dir, myHit.t0); 
+            
+            // Compute the point where inRay hit the grid-plane in WORLD coords:
+            vec4.scaleAndAdd(myHit.hitPt, inRay.orig, inRay.dir, myHit.t0);
+            
+            // set 'viewN' member to the reversed, normalized inRay.dir vector:
+            // ( CAREFUL! vec4.negate() changes sign of ALL components: x,y,z,w !!
+            // inRay.dir MUST be a vector, not a point, to ensure w sign has no effect)
+            vec4.negate(myHit.viewN, inRay.dir); 
+            
+            // ensure a unit-length vector
+            vec4.normalize(myHit.viewN, myHit.viewN);
+            
+            // Now find surface normal: 
+            // normal to sphere is the line from its origin to the point of intersection on surface
+            // but we need to TRANSFORM the normal to world-space, & re-normalize it.
+            vec4.subtract(myHit.surfNorm, myHit.modelHitPt, vec4.fromValues(0.0,0.0,0.0,1.0));
+            vec4.transformMat4(myHit.surfNorm, myHit.surfNorm, this.normal2world);
+            vec4.normalize(myHit.surfNorm, myHit.surfNorm);
+            
+            // TEMPORARY: sphere color-setting
+            // in CScene.makeRayTracedImage, use 'this.gapColor'
+            myHit.hitNum = 1;
+            // boolean return is for shadow ray:
+            }
+            return true;
+        }
+
+        t = t + d;
+        numSteps = numStpes + 1;
+    }
+
+    // if it reaches outside the loop, then it has not intersected the sphere
+    // So, no shadow also
+    return false;
+
+    
+
+    // DIAGNOSTIC
+    // if(g_myScene.pixFlag ==1)
+    // {
+    //     // did we reach the one 'flagged' pixel
+    //     // chosen in CScene.makeRayTracedImage()?
+    //     console.log("r2s:", r2s, "L2", L2, "tcaS", tcaS, "tca2", tca2,
+    //     "LM2", LM2, "L2hc", L2hc, "t0hit", t0hit, );  // YES!
+    // }
+    // END DIAGNOSTIC
+}
+
+CGeom.prototype.getSphereSDF = function(fromPoint)
+{
+    // center = origin (0,0,0)
+    // radius = 1.0
+    f = vec3.length(fromPoint) - 1.0;
+    return f;
 }
