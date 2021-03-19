@@ -652,8 +652,17 @@ CGeom.prototype.traceSphereImp = function(inRay, myHit, bIsShadowRay)
         var currPt = vec4.create();
         vec4.scaleAndAdd(currPt, rayT.orig, rayT.dir, t);
 
-        // get the SDF for the sphere
-        var d = this.getSphereSDF(currPt);
+
+        // get the SDF for the given implicit surface
+        var d = 0;
+        switch(this.shapeType)
+        {
+            case GeomShape.SphereImplicit:
+                d = this.getSphereSDF(currPt);
+                break;
+            default:
+                break;
+        }
 
         if (d < threshold*t) // we have an intersection!
         {
