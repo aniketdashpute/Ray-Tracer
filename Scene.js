@@ -641,9 +641,9 @@ CScene.prototype.findShade = function(eyeRay, myHit, recursionsLeft)
             // in shadow region, return;
             // keep some of the original color so that it does
             // not appear completely black
-            vec4.lerp(colr, this.blackShadow, colr, 0.5);
+            vec4.lerp(colr, this.blackShadow, colr, 0.3);
             // vec4.scaleAndAdd(colr, colr, colrAmbient, 0.2);
-            break;
+            continue;
         }
 
         // add diffused lighting:

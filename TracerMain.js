@@ -522,6 +522,16 @@ function onLight2SetLocation()
     g_myScene.initScene(g_SceneNum);
 }
 
+function onTraceButton()
+{
+    console.log("t/T key: TRACE a new image!"); // print on console,
+    g_myScene.makeRayTracedImage();
+    rayView.switchToMe();
+    rayView.reload();
+    // redraw BOTH viewports onscreen.
+    drawAll();
+}
+
 function onBrowserResize()
 {
     // Called when user re-sizes their browser window , because our HTML file
