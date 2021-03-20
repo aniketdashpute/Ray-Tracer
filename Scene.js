@@ -331,11 +331,11 @@ CScene.prototype.initScene = function(num)
 
     // First light:
     var vPos = vec4.fromValues(0.0, -15.0, 15.0, 1.0);
-    this.lights.push(new CLight(vPos));
+    if (g_Light1) {this.lights.push(new CLight(vPos));}
 
     // Second light:
     vPos = vec4.fromValues(15.0, 15.0, 10.0, 1.0);
-    this.lights.push(new CLight(vPos));
+    if (g_Light2) {this.lights.push(new CLight(vPos));}
   
     // set up new scene:
     switch(num)

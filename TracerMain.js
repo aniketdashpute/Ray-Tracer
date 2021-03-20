@@ -1,7 +1,8 @@
 /*******************************************************************
- * File: TracerMain.js
- * Author: Aniket Dashpute
- * Credits: Built from starter code by Prof. Jack Tumblin
+ * @file: TracerMain.js
+ * @author: Jack Tumblin
+ * @author: Aniket Dashpute
+ * Built from starter code by Prof. Jack Tumblin
  * Northwestern University
 *******************************************************************/
 
@@ -59,6 +60,10 @@ var g_AAcode = 1;
 var G_AA_MAX = 4;
 // ==1 for jitter, ==0 for no jitter.
 var g_isJitter = 0;
+
+// Light1 and Light2 both will be ON initially
+var g_Light1 = 1;
+var g_Light2 = 1;
 
 function main()
 {
@@ -452,6 +457,39 @@ function onSceneButton()
     g_myPic.setTestPattern(g_SceneNum);
     g_myScene.initScene(g_SceneNum);
     //g_myScene.makeRayTracedImage();
+    
+    // be sure OUR VBO & shaders are in use, then
+    rayView.switchToMe();
+    // re-transfer VBO contents and texture-map contents
+    rayView.reload();
+    drawAll();
+}
+
+function onLight1Button()
+{
+    //console.log('ON-SCENE BUTTON!');
+    g_Light1 = (g_Light1+1)%2;
+    if (g_Light1) {document.getElementById('Light1Report').innerHTML = 'ON';}
+    else {document.getElementById('Light1Report').innerHTML = 'OFF';}
+    
+
+    g_myScene.initScene(g_SceneNum);
+    
+    // be sure OUR VBO & shaders are in use, then
+    rayView.switchToMe();
+    // re-transfer VBO contents and texture-map contents
+    rayView.reload();
+    drawAll();
+}
+
+function onLight2Button()
+{
+    //console.log('ON-SCENE BUTTON!');
+    g_Light2 = (g_Light2+1)%2;
+    if (g_Light2) {document.getElementById('Light2Report').innerHTML = 'ON';}
+    else {document.getElementById('Light2Report').innerHTML = 'OFF';}
+
+    g_myScene.initScene(g_SceneNum);
     
     // be sure OUR VBO & shaders are in use, then
     rayView.switchToMe();
