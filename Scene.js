@@ -327,13 +327,22 @@ CScene.prototype.initScene = function(num)
             iNow = this.item.length -1;
 
             // Sphere 2 (using SDF)
-            this.item.push(new CGeom(GeomShape.SphereImplicit));
+            this.item.push(new CGeom(GeomShape.Sphere));
             iNow = this.item.length -1;
             // move around
             this.item[iNow].setIdent();
-            this.item[iNow].rayTranslate(0.0, -1.5, 2.0);
-            this.item[iNow].rayScale(1.0, 1.0, 1.0);
-            this.item[iNow].rayRotate(0.4*Math.PI, 1,0,0);
+            this.item[iNow].rayTranslate(0.0, -1.5, 1.0);
+            //this.item[iNow].rayScale(1.0, 1.0, 1.0);
+            // this.item[iNow].rayRotate(-0.5, 1,0,0);
+
+            // Disk
+            this.item.push(new CGeom(GeomShape.Disk));
+            iNow = this.item.length -1;
+            // move around
+            this.item[iNow].setIdent();
+            this.item[iNow].rayTranslate(0.0, -1.5, 3.0);
+            //this.item[iNow].rayScale(1.0, 1.0, 1.0);
+            // this.item[iNow].rayRotate(-0.5, 1,0,0);
             break;
 
         case 1:
@@ -579,20 +588,20 @@ CScene.prototype.findShade = function(eyeRay, myHit, recursionsLeft)
     if (myHit.hitNum == 0)
     {
         // use myGrid tracing to determine color
-        vec4.copy(colr, myHit.hitGeom.gapColor);
+        vec4.copy(colr, myHit.hitGeom.material2.K_diff);
     }
     else if (myHit.hitNum == 1)
     {
-        vec4.copy(colr, myHit.hitGeom.lineColor);
+        vec4.copy(colr, myHit.hitGeom.material1.K_diff);
     }
     else //if (myHit.hitNum == -1)
     {
         vec4.copy(colr, this.skyColor);
+        return colr;
     }
 
     // add some ambient light:
-    // var colrAmbient = vec4.fromValues(0.5,0.5,0.0,1.0);
-    // vec4.scaleAndAdd(colr, colr, colrAmbient, 0.1);
+    vec4.scaleAndAdd(colr, colr, myHit.hitGeom.material1.K_ambi, 0.1);
 
     // for shadows:
     // Light position will be destination
@@ -610,25 +619,31 @@ CScene.prototype.findShade = function(eyeRay, myHit, recursionsLeft)
         // in shadow region, return;
         // keep some of the original color so that it does
         // not appear completely black
-        vec4.lerp(colr, this.blackShadow, colr, 0.4);
+        vec4.lerp(colr, this.blackShadow, colr, 1.0);
         // vec4.scaleAndAdd(colr, colr, colrAmbient, 0.2);
         return colr;
     }
 
     // add diffused lighting:
-    var colrDiff = vec4.fromValues(1.0, 1.0, 1.0, 1.0);
+    var colrDiff = vec4.create();
+    vec4.copy(colrDiff, myHit.hitGeom.material1.K_diff);
+    if (this.pixFlag == 1)
+    {
+        console.log(colrDiff);
+    }
     var vLightDirNorm = vec4.create();
     vec4.normalize(vLightDirNorm, vLightDir);
     var colrDiffMag = vec4.dot(myHit.surfNorm, vLightDirNorm);
     if (colrDiffMag >0)
     {
         vec4.scale(colrDiff, colrDiff, colrDiffMag);
-        // vec4.scaleAndAdd(colr, colr, colrDiff, 0.1);
-        vec4.lerp(colr, colr, colrDiff, 0.0);
+        vec4.scaleAndAdd(colr, colr, colrDiff, 1.0);
+        // vec4.lerp(colr, colr, colrDiff, 0.2);
     }
 
     // add specular lighting:
-    var colrSpec = vec4.fromValues(1.0, 1.0, 1.0, 1.0);
+    var colrSpec = vec4.create();
+    vec4.copy(colrDiff, myHit.hitGeom.material1.K_spec);
     // get the halfway vector first
     // H = -ray.dir + light.dir
     var H = vec4.create();
@@ -637,10 +652,10 @@ CScene.prototype.findShade = function(eyeRay, myHit, recursionsLeft)
     var specMag = vec4.dot(myHit.surfNorm, H);
     if (specMag > 0)
     {
-        specMag = Math.pow(specMag, 6);
+        specMag = Math.pow(specMag, 1);
         vec4.scale(colrSpec, colrSpec, specMag);
-        // vec4.scaleAndAdd(colr, colr, colrSpec, 0.8);
-        vec4.lerp(colr, colr, colrSpec, 0.0);
+        vec4.scaleAndAdd(colr, colr, colrSpec, 1.0);
+        // vec4.lerp(colr, colr, colrSpec, 0.8);
     }
 
     // for reflections:
@@ -699,6 +714,7 @@ CScene.prototype.findShade = function(eyeRay, myHit, recursionsLeft)
 
 CScene.prototype.isInShadow = function(myHit, vSource, vDest)
 {
+    return false;
     if (this.pixFlag == 1)
     {
         console.log("Inside isInShadow");

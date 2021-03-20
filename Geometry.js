@@ -52,37 +52,60 @@ function CGeom(shapeSelect)
     // scale the box or sphere differently in different directions, forming 
     // ellipsoids for the unit sphere and rectangles (or prisms) from the unit box.
 
-    if(shapeSelect == undefined) shapeSelect = GeomShape.GroundPlane;	// default shape.
+    // default shape.
+    if(shapeSelect == undefined) shapeSelect = GeomShape.GroundPlane;
     this.shapeType = shapeSelect;
+
+    this.material1 = new CMaterial(Materials.RedPlastic);
+    this.material2 = new CMaterial(Materials.GreenPlastic);
+    this.material1.K_diff;
 
     // Get clever:  create 'traceMe()' function that calls the tracing function
     // needed by the shape held in this CGeom object.
-    switch(this.shapeType) {
+    switch(this.shapeType)
+    {
         case GeomShape.GroundPlane:
             //set the ray-tracing function (so we call it using item[i].traceMe() )
             this.traceMe = function(inR,hit,bIsShadowRay) { return this.traceGrid(inR,hit, bIsShadowRay);   }; 
-            this.xgap = 0.25;	// line-to-line spacing
-            this.ygap = 0.25;
-            this.lineWidth = 0.1;	// fraction of xgap used for grid-line width
-            this.lineColor = vec4.fromValues(0.0,0.0,0.0,1.0);  // RGBA green(A==opacity)
-            this.gapColor = vec4.fromValues( 0.9,0.9,0.9,1.0);  // near-white
+            // line-to-line spacing
+            this.xgap = 1.0;
+            this.ygap = 1.0;
+            // fraction of xgap used for grid-line width
+            this.lineWidth = 0.1;
+            // RGBA green(A==opacity)
+            this.lineColor = vec4.fromValues(0.1,0.5,0.1,1.0);
+            // near-white
+            this.gapColor = vec4.fromValues( 0.9,0.9,0.9,1.0);
+            this.material1.setMatl(Materials.BluePlastic);
+            this.material2.setMatl(Materials.GreenPlastic);
             break;
         case GeomShape.Disk:
             //set the ray-tracing function (so we call it using item[i].traceMe() )
             this.traceMe = function(inR,hit,bIsShadowRay) { return this.traceDisk(inR,hit, bIsShadowRay);   };
-            this.diskRad = 2.0;   // default radius of disk centered at origin
+            // default radius of disk centered at origin
+            this.diskRad = 2.0;
             // Disk line-spacing is set to 61/107 xgap,ygap  (ratio of primes)
             // disk line-width is set to 3* lineWidth, and it swaps lineColor & gapColor. 
-            this.xgap = 61/107;	// line-to-line spacing: a ratio of primes.
+            // line-to-line spacing: a ratio of primes.
+            this.xgap = 61/107;
             this.ygap = 61/107;
-            this.lineWidth = 0.1;	// fraction of xgap used for grid-line width
-            this.lineColor = vec4.fromValues(0.1,0.5,0.1,1.0);  // RGBA green(A==opacity)
-            this.gapColor = vec4.fromValues( 0.9,0.9,0.9,1.0);  // near-white
+            // fraction of xgap used for grid-line width
+            this.lineWidth = 0.1;
+            // RGBA green(A==opacity)
+            this.lineColor = vec4.fromValues(0.1,0.5,0.1,1.0);
+            // near-white
+            this.gapColor = vec4.fromValues( 0.9,0.9,0.9,1.0);
+            this.material1.setMatl(Materials.RedPlastic);
+            this.material2.setMatl(Materials.BluePlastic);
             break;
         case GeomShape.Sphere:
             //set the ray-tracing function (so we call it using item[i].traceMe() )
             this.traceMe = function(inR,hit,bIsShadowRay) { return this.traceSphere(inR,hit, bIsShadowRay); }; 
-            this.lineColor = vec4.fromValues(0.0,0.3,1.0,1.0);  // RGBA blue(A==opacity)
+            // RGBA blue(A==opacity)
+            this.lineColor = vec4.fromValues(0.0,0.3,1.0,1.0);
+            // Set some Material property
+            this.material1.setMatl(Materials.GoldShiny);
+            this.material2.setMatl(Materials.SilverShiny);
             break;
         case GeomShape.Box:
             //set the ray-tracing function (so we call it using item[i].traceMe() )
@@ -104,6 +127,9 @@ function CGeom(shapeSelect)
             //set the ray-tracing function (so we call it using item[i].traceMe() )
             this.traceMe = function(inR,hit,bIsShadowRay) { return this.SphereTrace(inR,hit, bIsShadowRay); }; 
             this.lineColor = vec4.fromValues(1.0,0.0,0.0,1.0);
+            // Set some Material property
+            this.material1.setMatl(Materials.GoldShiny);
+            this.material2.setMatl(Materials.SilverShiny);
             break;
         case GeomShape.CylinderImplicit:
             //set the ray-tracing function (so we call it using item[i].traceMe() )
@@ -207,6 +233,7 @@ CGeom.prototype.rayRotate = function(rad, ax, ay, az)
     // model normals->world
     mat4.transpose(this.normal2world, this.worldRay2model);
     mat4.transpose(this.normal2worldPost, this.normal2world);
+    //mat4.copy(this.normal2worldPost, this.normal2world);
 }
 
 CGeom.prototype.rayScale = function(sx,sy,sz)
@@ -709,7 +736,7 @@ CGeom.prototype.SphereTrace = function(inRay, myHit, bIsShadowRay)
             {
                 vec4.copy(myHit.surfNorm, normDir);
             }
-            mat4.transpose(this.normal2worldPost, this.normal2world);
+            //mat4.transpose(this.normal2worldPost, this.normal2world);
             vec4.transformMat4(myHit.surfNorm, myHit.surfNorm, this.normal2worldPost);
             vec4.normalize(myHit.surfNorm, myHit.surfNorm);
             
