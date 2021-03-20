@@ -332,8 +332,17 @@ CScene.prototype.initScene = function(num)
 
     // common lighting for all the scenes
 
-    // First light:
     var vPos = vec4.create();
+    // Light attached to camera (HeadLight)
+    if (g_Light0)
+    {
+        vec4.copy(vPos, gui.camEyePt);
+        var cLight = new CLight(vPos);
+        cLight.setPower(20);
+        this.lights.push(cLight);
+    }
+
+    // First light:
     vec4.copy(vPos, g_Light1Pos);
     if (g_Light1) {this.lights.push(new CLight(vPos));}
 
@@ -465,10 +474,10 @@ CScene.prototype.initScene = function(num)
 }
 
 /**
- * Function: makeRayTracedImage()
- * Params: None
+ * @function: makeRayTracedImage()
+ * @param: None
  * 
- * Description:
+ * @description:
  * Create an image by Ray-tracing; fill CImgBuf object  'imgBuf' with result.
  * (called when you press 'T' or 't')
  */
@@ -478,6 +487,9 @@ CScene.prototype.makeRayTracedImage = function()
     // Update our ray-tracer camera to match the WebGL preview camera:
     this.rayCam.rayPerspective(gui.camFovy, gui.camAspect, gui.camNear);
     this.rayCam.rayLookAt(gui.camEyePt, gui.camAimPt, gui.camUpVec);
+
+    // set Camera light (headlight) position if ON
+    if (g_Light0) {this.lights[0].setPosition(gui.camEyePt);}
 
     // just in case: this ensures our ray-tracer
     // will make an image that exactly fills the

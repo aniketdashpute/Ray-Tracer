@@ -62,6 +62,7 @@ var G_AA_MAX = 4;
 var g_isJitter = 0;
 
 // Light1 and Light2 both will be ON initially
+var g_Light0 = 1;
 var g_Light1 = 1;
 var g_Light2 = 1;
 
@@ -494,6 +495,22 @@ function onLight2Button()
     g_Light2 = (g_Light2+1)%2;
     if (g_Light2) {document.getElementById('Light2Report').innerHTML = 'ON';}
     else {document.getElementById('Light2Report').innerHTML = 'OFF';}
+
+    g_myScene.initScene(g_SceneNum);
+    
+    // be sure OUR VBO & shaders are in use, then
+    rayView.switchToMe();
+    // re-transfer VBO contents and texture-map contents
+    rayView.reload();
+    drawAll();
+}
+
+function onCameraLightButton()
+{
+    //console.log('ON-SCENE BUTTON!');
+    g_Light0 = (g_Light0+1)%2;
+    if (g_Light0) {document.getElementById('CameraLightReport').innerHTML = 'ON';}
+    else {document.getElementById('CameraLightReport').innerHTML = 'OFF';}
 
     g_myScene.initScene(g_SceneNum);
     

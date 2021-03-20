@@ -19,3 +19,18 @@ function CLight(lightPos)
 
     console.log("Light position: "+this.position);
 }
+
+CLight.prototype.setPower = function(nPower)
+{
+    this.power = nPower;
+}
+
+CLight.prototype.setPosition = function(lightPos)
+{
+    vec4.copy(this.position, lightPos);
+}
+
+CLight.prototype.setColor = function(color)
+{
+    vec4.copy(this.color, color);
+}
