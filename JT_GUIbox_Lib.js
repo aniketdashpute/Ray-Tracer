@@ -524,9 +524,7 @@ GUIbox.prototype.keyDown = function(kev) {
       drawAll();
       break;
     case "KeyT":                                // 't' or 'T' key: ray-trace!
-		  document.getElementById('KeyDown').innerHTML =  
-		  'GUIbox.KeyDown() t/T key: TRACE a new image!';	    // print on webpage,
-	    console.log("t/T key: TRACE a new image!");         // print on console,
+        console.log("t/T key: TRACE a new image!");         // print on console,
       g_myScene.makeRayTracedImage(); // (near end of traceSupplement.js)			
       rayView.switchToMe(); // be sure OUR VBO & shaders are in use, then
       rayView.reload();     // re-transfer VBO contents and texture-map contents
@@ -534,64 +532,41 @@ GUIbox.prototype.keyDown = function(kev) {
       break;
 		//------------------WASD QE navigation-----------------
 		case "KeyA":
-			document.getElementById('KeyDown').innerHTML =  
-			'GUIbox.KeyDown() a/A key. Strafe LEFT!';
 			console.log("a/A key: Strafe LEFT!\n");
 			this.camStrafe_L();
 			break;
 		case "KeyD":
-			document.getElementById('KeyDown').innerHTML = 
-			'GUIbox.KeyDown() d/D key. Strafe RIGHT!';
 			console.log("d/D key: Strafe RIGHT!\n");
 			this.camStrafe_R();
 			break;
 		case "KeyS":
-			document.getElementById('KeyDown').innerHTML = 
-			'GUIbox.KeyDown() s/S key. Move REV!';
 			console.log("s/S key: Move REV!\n");
 			this.camRev();
 			break;
 		case "KeyW":
-			document.getElementById('KeyDown').innerHTML =  
-			'GUIbox.keyDown() w/W key. Move FWD!';
 			console.log("w/W key: Move FWD!\n");
 			this.camFwd();
 			break;		
     case "KeyQ":
-//      console.log("q/Q key: strafe DOWN!\n");
-      document.getElementById('KeyDown').innerHTML = 
-      'GUIbox.keyDown() q/Q key. Strafe DOWN!';
       this.camStrafe_Dn();
       break;
     case "KeyE":
-//      console.log('e/E key: strafe UP!\n");
-      document.getElementById('KeyDown').innerHTML = 
-      'GUIbox.keyDown() e\E key. Strafe UP!';
+    // console.log('e/E key: strafe UP!\n");
       this.camStrafe_Up();
       break;
-		case "ArrowLeft": 	
-  			document.getElementById('KeyDown').innerHTML =
-  			'GUIbox.KeyDown() Arrow-Left,key='+kev.key;
+		case "ArrowLeft":
 			console.log("Arrow-Left key(UNUSED)");
   			break;
 		case "ArrowRight":
-  			document.getElementById('KeyDown').innerHTML =
-  			'GUIbox.KeyDown() Arrow-Right,key='+kev.key;
   			console.log("Arrow-Right key(UNUSED)");
   			break;
 		case "ArrowUp":		
-  			document.getElementById('KeyDown').innerHTML =
-  			'GUIbox.KeyDown() Arrow-Up,key='+kev.key;
   			console.log("Arrow-Up key(UNUSED)");
 			break;
 		case "ArrowDown":
-  			document.getElementById('KeyDown').innerHTML =
-  			'GUIbox.KeyDown() Arrow-Down,key='+kev.key;
   			console.log("Arrow-Down key(UNUSED)");
   			break;	
     default:
-  		document.getElementById('KeyDown').innerHTML =
-  			'GUIbox.KeyDown() UNUSED key='+kev.key;
   		console.log("UNUSED key:", kev.key);
       break;
   }

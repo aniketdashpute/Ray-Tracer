@@ -449,8 +449,9 @@ function onSceneButton()
 
     document.getElementById('SceneReport').innerHTML = 'Show Scene Number' + g_SceneNum;
 
+    g_myPic.setTestPattern(g_SceneNum);
     g_myScene.initScene(g_SceneNum);
-    g_myScene.makeRayTracedImage(); // (near end of traceSupplement.js)
+    //g_myScene.makeRayTracedImage();
     
     // be sure OUR VBO & shaders are in use, then
     rayView.switchToMe();
