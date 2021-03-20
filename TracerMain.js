@@ -69,6 +69,8 @@ var g_Light2 = 1;
 var g_Light1Pos = vec4.fromValues(15.0, 15.0, 10.0, 1.0);
 var g_Light2Pos = vec4.fromValues(0.0, -15.0, 15.0, 1.0);
 
+var g_ReflectionBounces = 3;
+
 function main()
 {
     // Retrieve the HTML-5 <canvas> element where webGL will draw our pictures:
@@ -520,6 +522,14 @@ function onLight2SetLocation()
     g_Light2Pos = vec4.fromValues(pL2x, pL2y, pL2z, 1.0);
 
     g_myScene.initScene(g_SceneNum);
+}
+
+function OnSetRefBounces()
+{
+    g_ReflectionBounces = document.getElementById('Bounces').value;
+    g_myScene.initScene(g_SceneNum);
+    onTraceButton();
+    console.log("OnSetRefBounces " + g_ReflectionBounces);
 }
 
 function onTraceButton()

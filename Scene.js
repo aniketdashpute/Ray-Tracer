@@ -309,6 +309,9 @@ CScene.prototype.initScene = function(num)
     // declared just above main().
     this.setImgBuf(g_myPic);
 
+    // maximum reflection bounces that we need for recursive tracing
+    this.ReflectionBounces = g_ReflectionBounces;
+
     // Set default sky color:
     // cyan/bright blue
     // this.skyColor = vec4.fromValues(0.3,1.0,1.0,1.0);
