@@ -178,9 +178,9 @@ GUIbox.prototype.init = function() {
 	// END Mouse & Keyboard Event-Handlers----------------------------------------
 
 		// REPORT initial mouse-drag totals on-screen:
-		document.getElementById('MouseDragResult').innerHTML=
-			'Mouse Drag totals (CVV coords):\t' + 
-			this.xMdragTot.toFixed(5) + ', \t' + this.yMdragTot.toFixed(5);	
+		// document.getElementById('MouseDragResult').innerHTML=
+		// 	'Mouse Drag totals (CVV coords):\t' + 
+		// 	this.xMdragTot.toFixed(5) + ', \t' + this.yMdragTot.toFixed(5);	
 
   // Camera-Navigation:----------------------------------
   // Initialize our camera aiming parameters using yaw-pitch sphere method.
@@ -251,11 +251,11 @@ GUIbox.prototype.mouseDown = function(mev) {
 	this.yMpos = this.yCVV;
 	this.isDrag = true;						  		// set our mouse-dragging flag
 	// display it on our webpage, too...
-	document.getElementById('MouseResult0').innerHTML = 
-	  'GUIbox.mouseDown() at CVV coords x,y = ' + 
-	  this.xMpos.toFixed(5) + ', ' + this.yMpos.toFixed(5);
-	console.log('GUIbox.mouseDown(): xMpos,yMpos== ' + 
-	  this.xMpos.toFixed(5) + ', ' + this.yMpos.toFixed(5));
+	// document.getElementById('MouseResult0').innerHTML = 
+	//   'GUIbox.mouseDown() at CVV coords x,y = ' + 
+	//   this.xMpos.toFixed(5) + ', ' + this.yMpos.toFixed(5);
+	// console.log('GUIbox.mouseDown(): xMpos,yMpos== ' + 
+	//   this.xMpos.toFixed(5) + ', ' + this.yMpos.toFixed(5));
 }
 
 GUIbox.prototype.mouseMove = function(mev) {	
@@ -278,11 +278,11 @@ GUIbox.prototype.mouseMove = function(mev) {
 	this.yMpos = this.yCVV;
 
   // Report mouse-drag totals on our webpage:
-	document.getElementById('MouseDragResult').innerHTML=
-			'Mouse Drag totals (CVV coords):\t' + 
-			this.xMdragTot.toFixed(5) + ', \t' + this.yMdragTot.toFixed(5) +
-			'<br>camYaw:' + (this.camYaw*(180/Math.PI)).toFixed(3) + 'deg.; camPitch:' + 
-			              (this.camPitch*(180/Math.PI)).toFixed(3) + 'deg.';	
+	// document.getElementById('MouseDragResult').innerHTML=
+	// 		'Mouse Drag totals (CVV coords):\t' + 
+	// 		this.xMdragTot.toFixed(5) + ', \t' + this.yMdragTot.toFixed(5) +
+	// 		'<br>camYaw:' + (this.camYaw*(180/Math.PI)).toFixed(3) + 'deg.; camPitch:' + 
+	// 		              (this.camPitch*(180/Math.PI)).toFixed(3) + 'deg.';	
   //-------------------------
   // Camera navigation:
   // Use mouse-drag amounts (in CVV units) to update camera aiming angles:
@@ -346,10 +346,10 @@ GUIbox.prototype.mouseUp = function(mev) {
 	              this.yMdragTot.toFixed(5));
 */
 	// display it on our webpage, too...
-	document.getElementById('MouseResult0').innerHTML = 
-	'GUIbox.mouseUp(       ) at CVV coords x,y = ' + 
-	              this.xMpos.toFixed(5) + ', ' + 
-	              this.yMpos.toFixed(5);
+	// document.getElementById('MouseResult0').innerHTML = 
+	// 'GUIbox.mouseUp(       ) at CVV coords x,y = ' + 
+	//               this.xMpos.toFixed(5) + ', ' + 
+	//               this.yMpos.toFixed(5);
 }
 
 GUIbox.prototype.mouseToCVV = function(mev) {
@@ -494,12 +494,12 @@ GUIbox.prototype.keyDown = function(kev) {
               "\n--kev.altKey:",  kev.altKey,   "\t--kev.metaKey:", kev.metaKey);
 */
   // On webpage, report EVERYTHING about this key-down event:              
-	document.getElementById('KeyDown').innerHTML = ''; // clear old result
-  document.getElementById('KeyMod').innerHTML = ''; 
-  document.getElementById('KeyMod' ).innerHTML = 
-        "   --kev.code:"+kev.code   +"      --kev.key:"+kev.key+
-    "<br>--kev.ctrlKey:"+kev.ctrlKey+" --kev.shiftKey:"+kev.shiftKey+
-    "<br> --kev.altKey:"+kev.altKey +"  --kev.metaKey:"+kev.metaKey;  
+// 	document.getElementById('KeyDown').innerHTML = ''; // clear old result
+//   document.getElementById('KeyMod').innerHTML = ''; 
+//   document.getElementById('KeyMod' ).innerHTML = 
+//         "   --kev.code:"+kev.code   +"      --kev.key:"+kev.key+
+//     "<br>--kev.ctrlKey:"+kev.ctrlKey+" --kev.shiftKey:"+kev.shiftKey+
+//     "<br> --kev.altKey:"+kev.altKey +"  --kev.metaKey:"+kev.metaKey;  
 			
   switch(kev.code) {
     case "Digit0":	

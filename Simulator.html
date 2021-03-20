@@ -12,7 +12,6 @@
         <canvas id="webgl" width="800" height="500">
         Please use a browser that supports "canvas"
         </canvas>
-        <br> <b>Ray Tracer: Press 't' to Trace!</b> (left: WebGL Scene Preview. Right: Ray-Traced Result.)
 
         <button type="button" onclick="onSuperSampleButton()" >Super-Sampling</button>
         <button type="button" onclick="onJitterButton()"      >Jitter</button>
@@ -24,23 +23,10 @@
         <!-- onSceneButton() modifies this span object's contents: -->
         <span id='SceneReport'> Show Scene Number 0 </span> 
 
+        <br> <b>Ray Tracer: Press 't' to Trace!</b> (left: WebGL Scene Preview. Right: Ray-Traced Result.)
         <br> Mouse Drag: Aims the camera (turns left,right,up,down)
-        <br> W/S; A/D keys: move camera forward/backwards; strafe left/right. Q/E: strafe down/up.
+        <b>W/S; A/D</b> keys: move camera forward/backwards; strafe left/right. Q/E: strafe down/up.
         
-        <hr> <!-- Draw a horizontal-line separator -->
-        <br> Open Console, please: (right-click-->'Inspect Element'-->'Console' tab)
-        <br> Try keyboard & mouse click/drag inside the canvas, and:
-        
-        <!-- Make 'div' elements to hold changeable HTML made in our JavaScript file;
-            (where? GUIbox-Lib.js, in keyboard & mouse fcns) -->
-        <p>
-            <div id='KeyDown'> KeyDown...</div>
-            <div id='KeyMod'> KeyMod...<br><br><br> </div>
-            <div id='MouseResult0'> MouseResult0... </div> 
-            <div id='MouseDragResult'> MouseDragResult... </div>
-            <div id='MouseCanvas'> MouseCanvas... </div>
-        </p>
-
         <!-- required libraries: -->
         <script src="lib/webgl-utils.js"></script>
         <script src="lib/webgl-debug.js"></script>
