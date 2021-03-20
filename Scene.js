@@ -268,6 +268,10 @@ function CScene()
     // CGeom objects of the  current scene.
     this.item = [];
 
+    // this JavaScript array holds all the
+    // CLight objects of the  current scene.
+    this.lights = [];
+
     // maximum reflection bounces that we need for recursive tracing
     this.ReflectionBounces = 3;
 }
@@ -317,6 +321,21 @@ CScene.prototype.initScene = function(num)
     this.item.length = 0;
     // index of the last CGeom object put into item[] array
     var iNow = 0;
+
+    // Empty the lights[] array, discard all leftover CGeom objects it may hold.
+    this.lights.length = 0;
+    // index of the last CGeom object put into lights[] array
+    var iLight = 0;
+
+    // common lighting for all the scenes
+
+    // First light:
+    var vPos = vec4.fromValues(0.0, -15.0, 15.0, 1.0);
+    this.lights.push(new CLight(vPos));
+
+    // Second light:
+    // vPos = vec4.fromValues(15.0, 15.0, 10.0, 1.0);
+    // this.lights.push(new CLight(vPos));
   
     // set up new scene:
     switch(num)
@@ -601,61 +620,67 @@ CScene.prototype.findShade = function(eyeRay, myHit, recursionsLeft)
     }
 
     // add some ambient light:
-    vec4.scaleAndAdd(colr, colr, myHit.hitGeom.material1.K_ambi, 0.1);
+    vec4.scaleAndAdd(colr, colr, myHit.hitGeom.material1.K_ambi, 1.0);
 
-    // for shadows:
-    // Light position will be destination
-    // TODO: for now, assume a light position
-    var vLightDir = vec4.fromValues(-15.0, -15.0, 15.0, 1.0);
-    // hit point will be the source
-    var vSource = myHit.hitPt;
-
-    // scale and add an epsilon
-    vec4.scaleAndAdd(vSource, vSource, eyeRay.dir, -this.epsilon);    
-
-    if (true == this.isInShadow(myHit, vSource, vLightDir))
+    for(var k=0; k< this.lights.length; k++)
     {
-        // console.log("SHADOW!!!!");
-        // in shadow region, return;
-        // keep some of the original color so that it does
-        // not appear completely black
-        vec4.lerp(colr, this.blackShadow, colr, 1.0);
-        // vec4.scaleAndAdd(colr, colr, colrAmbient, 0.2);
-        return colr;
-    }
+        // for shadows:
+        // Light position will be destination
+        // TODO: for now, assume a light position
+        var vLightPos = this.lights[k].position;
+        // hit point will be the source
+        var vSource = myHit.hitPt;
 
-    // add diffused lighting:
-    var colrDiff = vec4.create();
-    vec4.copy(colrDiff, myHit.hitGeom.material1.K_diff);
-    if (this.pixFlag == 1)
-    {
-        console.log(colrDiff);
-    }
-    var vLightDirNorm = vec4.create();
-    vec4.normalize(vLightDirNorm, vLightDir);
-    var colrDiffMag = vec4.dot(myHit.surfNorm, vLightDirNorm);
-    if (colrDiffMag >0)
-    {
-        vec4.scale(colrDiff, colrDiff, colrDiffMag);
-        vec4.scaleAndAdd(colr, colr, colrDiff, 1.0);
-        // vec4.lerp(colr, colr, colrDiff, 0.2);
-    }
+        // scale and add an epsilon
+        vec4.scaleAndAdd(vSource, vSource, eyeRay.dir, -this.epsilon);    
 
-    // add specular lighting:
-    var colrSpec = vec4.create();
-    vec4.copy(colrDiff, myHit.hitGeom.material1.K_spec);
-    // get the halfway vector first
-    // H = -ray.dir + light.dir
-    var H = vec4.create();
-    vec4.subtract(H, vLightDir, eyeRay.dir);
-    vec4.normalize(H, H);
-    var specMag = vec4.dot(myHit.surfNorm, H);
-    if (specMag > 0)
-    {
-        specMag = Math.pow(specMag, 1);
-        vec4.scale(colrSpec, colrSpec, specMag);
-        vec4.scaleAndAdd(colr, colr, colrSpec, 1.0);
-        // vec4.lerp(colr, colr, colrSpec, 0.8);
+        if (true == this.isInShadow(myHit, vSource, vLightPos))
+        {
+            // console.log("SHADOW!!!!");
+            // in shadow region, return;
+            // keep some of the original color so that it does
+            // not appear completely black
+            vec4.lerp(colr, this.blackShadow, colr, 0.5);
+            // vec4.scaleAndAdd(colr, colr, colrAmbient, 0.2);
+            break;
+        }
+
+        // add diffused lighting:
+        var colrDiff = vec4.create();
+        vec4.copy(colrDiff, myHit.hitGeom.material1.K_diff);
+        if (this.pixFlag == 1)
+        {
+            console.log(colrDiff);
+        }
+        var vLightDir = vec4.create();
+        vec4.subtract(vLightDir, vLightPos, vSource);
+        var sLightDist = vec4.length(vLightDir);
+        vec4.normalize(vLightDir, vLightDir);
+        var colrDiffMag = vec3.dot(myHit.surfNorm, vLightDir);
+        if (colrDiffMag >0)
+        {
+            // C_diff = material.color * light.color * Lambertian * lightpower/distance
+            vec4.multiply(colrDiff, this.lights[k].color, colrDiff);
+            vec4.scale(colrDiff, colrDiff, colrDiffMag * this.lights[k].power/(sLightDist + this.epsilon));
+            vec4.scaleAndAdd(colr, colr, colrDiff, 1.0);
+
+            // add specular lighting:
+            var colrSpec = vec4.create();
+            vec4.copy(colrSpec, myHit.hitGeom.material1.K_spec);
+            // get the halfway vector first
+            // H = -ray.dir + light.dir
+            var H = vec4.create();
+            vec4.subtract(H, vLightDir, eyeRay.dir);
+            vec4.normalize(H, H);
+            var specMag = vec4.dot(myHit.surfNorm, H);
+            specMag = Math.pow(specMag, myHit.hitGeom.material1.K_shiny);
+
+            // C_spec = material.spec_color * light.color * specMag * lightpower/distance
+            vec4.multiply(colrSpec, this.lights[k].color, colrSpec);
+            vec4.scale(colrSpec, colrSpec, specMag * this.lights[k].power/(sLightDist + this.epsilon));
+            vec4.scaleAndAdd(colr, colr, colrSpec, 1.0);
+            //if (specMag > 0){}
+        }
     }
 
     // for reflections:
@@ -714,7 +739,7 @@ CScene.prototype.findShade = function(eyeRay, myHit, recursionsLeft)
 
 CScene.prototype.isInShadow = function(myHit, vSource, vDest)
 {
-    return false;
+    //return false;
     if (this.pixFlag == 1)
     {
         console.log("Inside isInShadow");
@@ -732,7 +757,7 @@ CScene.prototype.isInShadow = function(myHit, vSource, vDest)
         console.log("2 rayDirection: ", this.eyeRay2.dir[0]," ",this.eyeRay2.dir[1]," ",this.eyeRay2.dir[2]," ",this.eyeRay2.dir[3]," ");
     }
 
-    for(k=0; k< this.item.length; k++)
+    for(var k=0; k< this.item.length; k++)
     {   
         if (this.pixFlag == 1)
         {
