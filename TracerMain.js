@@ -65,6 +65,10 @@ var g_isJitter = 0;
 var g_Light1 = 1;
 var g_Light2 = 1;
 
+// Light 1 and Light 2 positions
+var g_Light1Pos = vec4.fromValues(15.0, 15.0, 10.0, 1.0);
+var g_Light2Pos = vec4.fromValues(0.0, -15.0, 15.0, 1.0);
+
 function main()
 {
     // Retrieve the HTML-5 <canvas> element where webGL will draw our pictures:
@@ -496,6 +500,26 @@ function onLight2Button()
     // re-transfer VBO contents and texture-map contents
     rayView.reload();
     drawAll();
+}
+
+function onLight1SetLocation()
+{
+    var pL1x = document.getElementById('L1x').value;
+    var pL1y = document.getElementById('L1y').value;
+    var pL1z = document.getElementById('L1z').value;
+    g_Light1Pos = vec4.fromValues(pL1x, pL1y, pL1z, 1.0);
+
+    g_myScene.initScene(g_SceneNum);
+}
+
+function onLight2SetLocation()
+{
+    var pL2x = document.getElementById('L2x').value;
+    var pL2y = document.getElementById('L2y').value;
+    var pL2z = document.getElementById('L2z').value;
+    g_Light2Pos = vec4.fromValues(pL2x, pL2y, pL2z, 1.0);
+
+    g_myScene.initScene(g_SceneNum);
 }
 
 function onBrowserResize()
