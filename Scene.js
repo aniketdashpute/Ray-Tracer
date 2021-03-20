@@ -307,7 +307,8 @@ CScene.prototype.initScene = function(num)
 
     // Set default sky color:
     // cyan/bright blue
-    this.skyColor = vec4.fromValues(0.3,1.0,1.0,1.0);
+    // this.skyColor = vec4.fromValues(0.3,1.0,1.0,1.0);
+    this.skyColor = vec4.fromValues(0,0,0,1.0);
 
     // Shadow color: black
     this.blackShadow = vec4.fromValues(0.0, 0.0, 0.0, 1.0);
@@ -320,160 +321,111 @@ CScene.prototype.initScene = function(num)
     // set up new scene:
     switch(num)
     {
-        case 0:
-            //---Ground Plane-----
-            // draw this in world-space; no transforms!
-            // Append gnd-plane to item[] array
+        case 2:
+            // Ground Plane
             this.item.push(new CGeom(GeomShape.GroundPlane));
-            // get its array index.
-            // use default colors.
-            // no transforms needed.
             iNow = this.item.length -1;
 
-            //-----Sphere 2-----
-            // Append sphere to item[]
+            // Sphere 2 (using SDF)
             this.item.push(new CGeom(GeomShape.SphereImplicit));
-            // get its array index
             iNow = this.item.length -1;
-
-            // Initially leave sphere at the origin. Once you see it, then
-            // move it to a more-sensible location:
-            // start in world coord axes
+            // move around
             this.item[iNow].setIdent();
-            // move rightwards (+x),
-            // and toward camera (-y) enough to stay clear of disks, and up by 1 to
-            // make this radius==1 sphere rest on gnd-plane.
             this.item[iNow].rayTranslate(0.0, -1.5, 2.0);
-            // make an ellipsoid from the sphere
             this.item[iNow].rayScale(1.0, 1.0, 1.0);
             this.item[iNow].rayRotate(0.4*Math.PI, 1,0,0);
             break;
+
         case 1:
-            // (default scene number; must create a 3D scene for ray-tracing
-            // create our list of CGeom shapes that fill our 3D scene:
-
-            //---Ground Plane-----
-            // draw this in world-space; no transforms!
-            // Append gnd-plane to item[] array
+            // Ground Plane
             this.item.push(new CGeom(GeomShape.GroundPlane));
-            // get its array index.
-            // use default colors.
-            // no transforms needed.
             iNow = this.item.length -1;
 
-            //-----Disk 1------
-            // Append 2D disk to item[]
+            // Disk 1
             this.item.push(new CGeom(GeomShape.Disk));
-            // get its array index.
             iNow = this.item.length -1;
-            // console.log('iNow should be 1; it is:', iNow);
-            
             // set up distinctive coloring:
-            // bluish gray
             vec4.set(this.item[iNow].gapColor,  0.3,0.6,0.7,1.0);
-            // muddy red
             vec4.set(this.item[iNow].lineColor, 0.7,0.3,0.3,1.0);
-
-            // Now apply transforms to set disk's size, orientation, & position.
-            // (Be sure to do these same transforms in WebGL preview; find them in the
-            //  JT_VBObox-lib.js file, in VBObox0.draw() function)
-            // start in world coord axes
+            // move around
             this.item[iNow].setIdent();
-            // move drawing axes 
-            // RIGHT, BACK, & UP.
             this.item[iNow].rayTranslate(1,1,1.3);
+            this.item[iNow].rayRotate(0.25*Math.PI, 1,0,0);
+            this.item[iNow].rayRotate(0.25*Math.PI, 0,0,1);
 
-            this.item[iNow].rayRotate(0.25*Math.PI, 1,0,0); // rot 45deg on x axis to face us
-            this.item[iNow].rayRotate(0.25*Math.PI, 0,0,1); // z-axis rotate 45deg.
-      
-            //-----Disk 2------ 
-            // Append 2D disk to item[] &
+            // Disk 2 
             this.item.push(new CGeom(GeomShape.Disk));
-            // get its array index.
             iNow = this.item.length -1;
-
-            // set up distinctive coloring:
-            // Blue
+            // set colors for disk
             vec4.set(this.item[iNow].gapColor,  0.0,0.0,1.0,1.0);
-            // yellow
             vec4.set(this.item[iNow].lineColor, 1.0,1.0,0.0,1.0);
-
-            // Now apply transforms to set disk's size, orientation, & position.
-            // (Be sure to do these same transforms in WebGL preview; find them in the
-            //  JT_VBObox-lib.js file, in VBObox0.draw() function)
-            // start in world coord axes
+            // move around
             this.item[iNow].setIdent();
-            // move drawing axes 
-            // LEFT, BACK, & UP.
             this.item[iNow].rayTranslate(-1,1,1.3);
-
-            // rot 135 on x axis to face us
             this.item[iNow].rayRotate(0.75*Math.PI, 1,0,0);
-            // z-axis rotate 60deg.
             this.item[iNow].rayRotate(Math.PI/3, 0,0,1);
 
-            //-----Sphere 1-----
-            // Append sphere to item[]
+            // Sphere 1
             this.item.push(new CGeom(GeomShape.Sphere));
-            // get its array index.
             iNow = this.item.length -1;
-
-            // (Be sure to do these same transforms in WebGL preview; find them in the
-            //  JT_VBObox-lib.js file, in VBObox0.draw() function)
-
-            // Initially leave sphere at the origin. Once you see it, then
-            // move it to a more-sensible location:
-            // start in world coord axes
+            // move around
             this.item[iNow].setIdent();
-            // move rightwards (+x),
-            // and toward camera (-y) enough to stay clear of disks, and up by 1 to
-            // make this radius==1 sphere rest on gnd-plane.
             this.item[iNow].rayTranslate(3.0, -2.0, 2.0);
-            // make an ellipsoid from the sphere
             this.item[iNow].rayScale(1.0, 1.0, 2.0);
 
-            //-----Sphere 2-----
-            // Append sphere to item[]
+            // Sphere 2 (using SDF-sphere tracing)
             this.item.push(new CGeom(GeomShape.SphereImplicit));
-            // get its array index
             iNow = this.item.length -1;
-
-            // Initially leave sphere at the origin. Once you see it, then
-            // move it to a more-sensible location:
-            // start in world coord axes
+            // move around
             this.item[iNow].setIdent();
-            // move rightwards (+x),
-            // and toward camera (-y) enough to stay clear of disks, and up by 1 to
-            // make this radius==1 sphere rest on gnd-plane.
             this.item[iNow].rayTranslate(0.0, -1.5, 2.0);
-            // make an ellipsoid from the sphere
-            this.item[iNow].rayScale(1.0, 1.0, 1.0);
             this.item[iNow].rayRotate(0.4*Math.PI, 1,0,0);
 
-            //-----Cylinder-----
-            // Append sphere to item[]
+            // Cylinder (using SDF-sphere tracing)
             this.item.push(new CGeom(GeomShape.CylinderImplicit));
-            // get its array index
+            iNow = this.item.length -1;
+            this.item[iNow].setIdent(); 
+            // move around
+            this.item[iNow].rayTranslate(-2.0, -2.0, 2.0);
+            break;
+
+        case 0:
+            // Ground Plane
+            this.item.push(new CGeom(GeomShape.GroundPlane));
             iNow = this.item.length -1;
 
-            // Initially leave sphere at the origin. Once you see it, then
-            // move it to a more-sensible location:
-            // start in world coord axes
-            this.item[iNow].setIdent(); 
-            this.item[iNow].rayTranslate(-2.0, -2.0, 2.0);
-            // rot 135 on x axis to face us
+            // Sphere 1
+            this.item.push(new CGeom(GeomShape.CylinderImplicit));
+            iNow = this.item.length -1;
+            // move around
+            this.item[iNow].setIdent();
+            this.item[iNow].rayTranslate(0.0, 3.0, 2.0);
+            // this.item[iNow].rayScale(2.0, 2.0, 2.0);
+            this.item[iNow].lineColor = vec4.fromValues(0.0,0.3,1.0,1.0);
+            
+            // Sphere 2
+            this.item.push(new CGeom(GeomShape.CylinderImplicit));
+            iNow = this.item.length -1;
+            // move around
+            this.item[iNow].setIdent();
+            this.item[iNow].rayTranslate(-1.5, 2.0, 1.0);
+            this.item[iNow].rayScale(1.0, 1.0, 1.0);
+            this.item[iNow].lineColor = vec4.fromValues(1.0,0.3,0.0,1.0);
+
+            // Sphere 3
+            this.item.push(new CGeom(GeomShape.SphereImplicit));
+            iNow = this.item.length -1;
+            // move around
+            this.item[iNow].setIdent();
+            this.item[iNow].rayTranslate(2.3, 0.2, 1.0);
+            // this.item[iNow].rayScale(2.0, 2.0, 2.0);
+            this.item[iNow].lineColor = vec4.fromValues(0.8,0.8,0.0,1.0);
             break;
-        case 2:
-            //
-            //
-            // another: SCENE 2 SETUP   
-            console.log("JT_tracer0-Scene file: CScene.initScene(",num,") NOT YET IMPLEMENTED.");    //
-            this.initScene(0); // use default scene
-            //
-            break;
-        default: // nonsensical 'sceneNum' value?
-            console.log("JT_tracer0-Scene file: CScene.initScene(",num,") NOT YET IMPLEMENTED.");
-            this.initScene(0);   // init the default scene.
+
+        default:
+            console.log("CScene.initScene(",num,") NOT YET IMPLEMENTED.");
+            // init the default scene
+            this.initScene(0);
             break;
     }
 }
@@ -637,8 +589,8 @@ CScene.prototype.findShade = function(eyeRay, myHit, recursionsLeft)
     }
 
     // add some ambient light:
-    var colrAmbient = vec4.fromValues(0.5,0.5,0.0,1.0);
-    vec4.scaleAndAdd(colr, colr, colrAmbient, 0.1);
+    // var colrAmbient = vec4.fromValues(0.5,0.5,0.0,1.0);
+    // vec4.scaleAndAdd(colr, colr, colrAmbient, 0.1);
 
     // for shadows:
     // Light position will be destination
@@ -656,7 +608,7 @@ CScene.prototype.findShade = function(eyeRay, myHit, recursionsLeft)
         // in shadow region, return;
         // keep some of the original color so that it does
         // not appear completely black
-        vec4.lerp(colr, this.blackShadow, colr, 0.1);
+        vec4.lerp(colr, this.blackShadow, colr, 0.4);
         // vec4.scaleAndAdd(colr, colr, colrAmbient, 0.2);
         return colr;
     }
@@ -669,7 +621,8 @@ CScene.prototype.findShade = function(eyeRay, myHit, recursionsLeft)
     if (colrDiffMag >0)
     {
         vec4.scale(colrDiff, colrDiff, colrDiffMag);
-        vec4.scaleAndAdd(colr, colr, colrDiff, 0.1);
+        // vec4.scaleAndAdd(colr, colr, colrDiff, 0.1);
+        vec4.lerp(colr, colr, colrDiff, 0.0);
     }
 
     // add specular lighting:
@@ -684,7 +637,8 @@ CScene.prototype.findShade = function(eyeRay, myHit, recursionsLeft)
     {
         specMag = Math.pow(specMag, 6);
         vec4.scale(colrSpec, colrSpec, specMag);
-        vec4.scaleAndAdd(colr, colr, colrSpec, 0.8);
+        // vec4.scaleAndAdd(colr, colr, colrSpec, 0.8);
+        vec4.lerp(colr, colr, colrSpec, 0.0);
     }
 
     // for reflections:
@@ -693,24 +647,30 @@ CScene.prototype.findShade = function(eyeRay, myHit, recursionsLeft)
     vec4.copy(vNormal, myHit.surfNorm);
     // then get reflected ray direction:
 
-    // C = (L.N)N
+    // C = L-(L.N)N
     var C = vec4.create();
-    var Clen = vec4.dot(eyeRay.dir, vNormal);
-    vec4.scale(C, vNormal, -Clen);
+    // L.N
+    var sLdotN = vec4.dot(eyeRay.dir, vNormal);
+    vec4.scaleAndAdd(C, eyeRay.dir, vNormal, -sLdotN);
 
     // R = 2C - L
-    // here, L = -eye.dir
-    // So -L + 2C = eye.dir + 2C
     var R = vec4.create();
-    vec4.scaleAndAdd(R, eyeRay.dir, C, 2);
+    // L = eye.dir, negL = -L
+    var eyeRayNeg = vec4.create();
+    vec4.negate(eyeRayNeg, eyeRay.dir);
+    // R = -L + 2C = negL + 2C
+    vec4.scaleAndAdd(R, eyeRayNeg, C, 2);
 
     // that will be the direction for our new light ray
 
 
     // For now: TEMP DIR
-    var vDir = C;
+    var vDir = R;
     // hit point will be the source
     var vSource = myHit.hitPt;
+
+    // scale and add an epsilon
+    // vec4.scaleAndAdd(vSource, vSource, eyeRay.dir, -this.epsilon);
 
     // generate the eye Ray
     this.rayCam.setEyeRaySourceInDir(this.eyeRay2, vSource, vDir);
@@ -729,8 +689,8 @@ CScene.prototype.findShade = function(eyeRay, myHit, recursionsLeft)
     colrRec = this.traceRay(this.eyeRay2, myHit, recursionsLeft);
 
     // vec4.lerp(out, a, b, t) => out = a + t * (b - a);
-    // vec4.lerp(colr, colr, colrRec, 0.4);
-    vec4.scaleAndAdd(colr, colr, colrRec, 0.4);
+    // vec4.lerp(colr, colr, colrRec, 0.5);
+    vec4.lerp(colr, colr, colrRec, 0.4);
 
     return colr;
 }

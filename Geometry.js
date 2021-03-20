@@ -651,7 +651,7 @@ CGeom.prototype.SphereTrace = function(inRay, myHit, bIsShadowRay)
     vec4.transformMat4(rayT.dir,  inRay.dir,  this.worldRay2model);
 
     var maxDistance = 100;
-    var threshold = 1.0E-8;
+    var threshold = 1.0E-6;
     var numStpes = 0;
     var t = 0;
 
@@ -664,13 +664,15 @@ CGeom.prototype.SphereTrace = function(inRay, myHit, bIsShadowRay)
 
         // get the SDF for the given implicit surface
         var d = 0;
+        var normDir = vec4.create();
         switch(this.shapeType)
         {
             case GeomShape.SphereImplicit:
-                d = Math.max(this.getSphereSDF(currPt), -this.getCylinderSDF(currPt));
+                // d = Math.max(this.getSphereSDF(currPt), -this.getCylinderSDF(currPt));
+                d = this.getSphereSDF(currPt);
                 break;
             case GeomShape.CylinderImplicit:
-                d = this.getCylinderSDF(currPt);
+                d = this.getCylinderSDF(currPt, normDir);
                 break;
             default:
                 break;
@@ -709,6 +711,10 @@ CGeom.prototype.SphereTrace = function(inRay, myHit, bIsShadowRay)
             // normal to sphere is the line from its origin to the point of intersection on surface
             // but we need to TRANSFORM the normal to world-space, & re-normalize it.
             vec4.subtract(myHit.surfNorm, myHit.modelHitPt, vec4.fromValues(0.0,0.0,0.0,1.0));
+            if (this.shapeType == GeomShape.CylinderImplicit)
+            {
+                vec4.copy(myHit.surfNorm, normDir);
+            }
             vec4.transformMat4(myHit.surfNorm, myHit.surfNorm, this.normal2world);
             vec4.normalize(myHit.surfNorm, myHit.surfNorm);
             
@@ -751,7 +757,7 @@ CGeom.prototype.getSphereSDF = function(fromPoint)
     return f;
 }
 
-CGeom.prototype.getCylinderSDF = function(fromPoint)
+CGeom.prototype.getCylinderSDF = function(fromPoint, normDir)
 {
     // get the distance of the point from the z axis
     // subtract the value of radius from that distance
@@ -772,8 +778,9 @@ CGeom.prototype.getCylinderSDF = function(fromPoint)
     f3 = -1.0 - fromPoint[2];
 
     // case 1: inside the length of cylinder
-    if (f2 < 0 && f3 < 0)
+    if (f2 <= 0 && f3 <= 0)
     {
+        normDir = vec4.fromValues(fromPoint[0], fromPoint[1], 0.0, 0.0);
         return f1;
     }
     // case 2: inside the radial distance
