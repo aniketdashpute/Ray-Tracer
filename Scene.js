@@ -393,32 +393,34 @@ CScene.prototype.initScene = function(num)
             // Ground Plane
             this.item.push(new CGeom(GeomShape.GroundPlane));
             iNow = this.item.length -1;
+            this.item[iNow].setIdent();
+            this.item[iNow].rayTranslate(0.0, 0.0, 0.0);
 
             // Sphere 1
-            this.item.push(new CGeom(GeomShape.CylinderImplicit));
+            this.item.push(new CGeom(GeomShape.Sphere));
             iNow = this.item.length -1;
             // move around
             this.item[iNow].setIdent();
-            this.item[iNow].rayTranslate(0.0, 3.0, 2.0);
+            this.item[iNow].rayTranslate(2.2, 0.2, 1.0);
             // this.item[iNow].rayScale(2.0, 2.0, 2.0);
             this.item[iNow].lineColor = vec4.fromValues(0.0,0.3,1.0,1.0);
             
-            // Sphere 2
-            this.item.push(new CGeom(GeomShape.CylinderImplicit));
+            // // Sphere 2
+            this.item.push(new CGeom(GeomShape.Sphere));
             iNow = this.item.length -1;
             // move around
             this.item[iNow].setIdent();
-            this.item[iNow].rayTranslate(-1.5, 2.0, 1.0);
-            this.item[iNow].rayScale(1.0, 1.0, 1.0);
+            this.item[iNow].rayTranslate(-2.2, 0.2, 1.0);
+            // this.item[iNow].rayScale(1.0, 1.0, 1.0);
             this.item[iNow].lineColor = vec4.fromValues(1.0,0.3,0.0,1.0);
 
             // Sphere 3
-            this.item.push(new CGeom(GeomShape.SphereImplicit));
+            this.item.push(new CGeom(GeomShape.Sphere));
             iNow = this.item.length -1;
             // move around
             this.item[iNow].setIdent();
-            this.item[iNow].rayTranslate(2.3, 0.2, 1.0);
-            // this.item[iNow].rayScale(2.0, 2.0, 2.0);
+            this.item[iNow].rayTranslate(0.0, 0.2, 1.0);
+            this.item[iNow].rayScale(1.0, 1.0, 1.0);
             this.item[iNow].lineColor = vec4.fromValues(0.8,0.8,0.0,1.0);
             break;
 

@@ -61,10 +61,10 @@ function CGeom(shapeSelect)
         case GeomShape.GroundPlane:
             //set the ray-tracing function (so we call it using item[i].traceMe() )
             this.traceMe = function(inR,hit,bIsShadowRay) { return this.traceGrid(inR,hit, bIsShadowRay);   }; 
-            this.xgap = 1.0;	// line-to-line spacing
-            this.ygap = 1.0;
+            this.xgap = 0.25;	// line-to-line spacing
+            this.ygap = 0.25;
             this.lineWidth = 0.1;	// fraction of xgap used for grid-line width
-            this.lineColor = vec4.fromValues(0.1,0.5,0.1,1.0);  // RGBA green(A==opacity)
+            this.lineColor = vec4.fromValues(0.0,0.0,0.0,1.0);  // RGBA green(A==opacity)
             this.gapColor = vec4.fromValues( 0.9,0.9,0.9,1.0);  // near-white
             break;
         case GeomShape.Disk:
@@ -128,6 +128,10 @@ function CGeom(shapeSelect)
     // This matrix transforms MODEL-space normals (where they're easy to find)
     // to WORLD-space coords (where we need them for lighting calculations)
     this.normal2world = mat4.create();
+    // But, we need to premultiply by the above matrix to the vector
+    // Let's just make the best use of glMatrix library and post multiply the matrix instead
+    // this "Post" matrix will be just a transpose of the original matrix
+    this.normal2worldPost = mat4.create();
 }
 
 CGeom.prototype.setIdent = function()
@@ -135,6 +139,7 @@ CGeom.prototype.setIdent = function()
     // Discard worldRay2model contents, replace with identity matrix (world==model).
     mat4.identity(this.worldRay2model);  
     mat4.identity(this.normal2world);
+    mat4.transpose(this.normal2worldPost, this.normal2world);
 }
 
 CGeom.prototype.rayTranslate = function(x,y,z)
@@ -151,6 +156,7 @@ CGeom.prototype.rayTranslate = function(x,y,z)
     mat4.multiply(this.worldRay2model, a, this.worldRay2model);
     // model normals->world
     mat4.transpose(this.normal2world, this.worldRay2model);
+    mat4.transpose(this.normal2worldPost, this.normal2world);
 }
 
 CGeom.prototype.rayRotate = function(rad, ax, ay, az)
@@ -200,6 +206,7 @@ CGeom.prototype.rayRotate = function(rad, ax, ay, az)
     mat4.multiply(this.worldRay2model, b, this.worldRay2model);
     // model normals->world
     mat4.transpose(this.normal2world, this.worldRay2model);
+    mat4.transpose(this.normal2worldPost, this.normal2world);
 }
 
 CGeom.prototype.rayScale = function(sx,sy,sz)
@@ -222,6 +229,7 @@ CGeom.prototype.rayScale = function(sx,sy,sz)
     mat4.multiply(this.worldRay2model, c, this.worldRay2model);
     // model normals->world
     mat4.transpose(this.normal2world, this.worldRay2model);
+    mat4.transpose(this.normal2worldPost, this.normal2world);
 }
 
 CGeom.prototype.traceGrid = function(inRay, myHit, bIsShadowRay)
@@ -322,44 +330,30 @@ CGeom.prototype.traceGrid = function(inRay, myHit, bIsShadowRay)
     // surface normal FIXED at world +Z.
     vec4.set(myHit.surfNorm, 0,0,1,0);
     
-    /* or if you wish:
     // COMPUTE the surface normal:  (needed if you transformed the gnd-plane grid)
     // in model space we know it's always +z,
     // but we need to TRANSFORM the normal to world-space, & re-normalize it.
-    vec4.transformMat4(myHit.surfNorm, vec4.fromValues(0,0,1,0), this.normal2world);
+    vec4.transformMat4(myHit.surfNorm, vec4.fromValues(0,0,1,0), this.normal2worldPost);
     vec4.normalize(myHit.surfNorm, myHit.surfNorm);
-    */
 
     // FIND COLOR at model-space hit-point---------------------------------                        
-    var loc = myHit.modelHitPt[0] / this.xgap; // how many 'xgaps' from the origin?
-    if(myHit.modelHitPt[0] < 0) loc = -loc;    // keep >0 to form double-width line at yaxis.
-    //console.log("loc",loc, "loc%1", loc%1, "lineWidth", this.lineWidth);
-
-    // fractional part of loc < linewidth? 
-    if(loc%1 < this.lineWidth)
-    {
-        // YES. rayT hit a line of constant-x
-        myHit.hitNum =  1;
-        return true;
-    }
+    var locX = myHit.modelHitPt[0] / this.xgap; // how many 'xgaps' from the origin?
+    locX = Math.floor(locX);
 
     // how many 'ygaps' from origin?
-    loc = myHit.modelHitPt[1] / this.ygap;
-    // keep >0 to form double-width line at xaxis.
-    if(myHit.modelHitPt[1] < 0) loc = -loc;
+    var locY = myHit.modelHitPt[1] / this.ygap;
+    locY = Math.floor(locY);
 
-    // fractional part of loc < linewidth? 
-    if(loc%1 < this.lineWidth)
+    if ((locX + locY)%2 != 0)
     {
-        // YES. rayT hit a line of constant-y
         myHit.hitNum =  1;
         return true;
     }
-
-    // fractional part of loc < linewidth? 
-    // No.
-    myHit.hitNum = 0;
-    return true;
+    else
+    {
+        myHit.hitNum = 0;
+        return true;
+    }
 }
 
 CGeom.prototype.traceDisk = function(inRay, myHit, bIsShadowRay)
@@ -427,7 +421,7 @@ CGeom.prototype.traceDisk = function(inRay, myHit, bIsShadowRay)
     // Now find surface normal: 
     // in model space we know it's always +z,
     // but we need to TRANSFORM the normal to world-space, & re-normalize it.
-    vec4.transformMat4(myHit.surfNorm, vec4.fromValues(0,0,1,0), this.normal2world);
+    vec4.transformMat4(myHit.surfNorm, vec4.fromValues(0,0,1,0), this.normal2worldPost);
     vec4.normalize(myHit.surfNorm, myHit.surfNorm);
   
     // Hit point color:    
@@ -589,7 +583,7 @@ CGeom.prototype.traceSphere = function(inRay, myHit, bIsShadowRay)
     // normal to sphere is the line from its origin to the point of intersection on surface
     // but we need to TRANSFORM the normal to world-space, & re-normalize it.
     vec4.subtract(myHit.surfNorm, myHit.modelHitPt, vec4.fromValues(0.0,0.0,0.0,1.0));
-    vec4.transformMat4(myHit.surfNorm, myHit.surfNorm, this.normal2world);
+    vec4.transformMat4(myHit.surfNorm, myHit.surfNorm, this.normal2worldPost);
     vec4.normalize(myHit.surfNorm, myHit.surfNorm);
     
     // TEMPORARY: sphere color-setting
@@ -715,7 +709,8 @@ CGeom.prototype.SphereTrace = function(inRay, myHit, bIsShadowRay)
             {
                 vec4.copy(myHit.surfNorm, normDir);
             }
-            vec4.transformMat4(myHit.surfNorm, myHit.surfNorm, this.normal2world);
+            mat4.transpose(this.normal2worldPost, this.normal2world);
+            vec4.transformMat4(myHit.surfNorm, myHit.surfNorm, this.normal2worldPost);
             vec4.normalize(myHit.surfNorm, myHit.surfNorm);
             
             // TEMPORARY: sphere color-setting
