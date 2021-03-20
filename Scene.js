@@ -334,8 +334,8 @@ CScene.prototype.initScene = function(num)
     this.lights.push(new CLight(vPos));
 
     // Second light:
-    // vPos = vec4.fromValues(15.0, 15.0, 10.0, 1.0);
-    // this.lights.push(new CLight(vPos));
+    vPos = vec4.fromValues(15.0, 15.0, 10.0, 1.0);
+    this.lights.push(new CLight(vPos));
   
     // set up new scene:
     switch(num)
