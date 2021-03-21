@@ -414,6 +414,8 @@ CScene.prototype.initScene = function(num)
             this.item[iNow].rayTranslate(2.2, 0.2, 1.0);
             // this.item[iNow].rayScale(2.0, 2.0, 2.0);
             this.item[iNow].lineColor = vec4.fromValues(0.0,0.3,1.0,1.0);
+            // set material
+            this.item[iNow].material1.setMatl(Materials.RedPlastic);
             
             // // Sphere 2
             this.item.push(new CGeom(GeomShape.Sphere));
@@ -766,7 +768,7 @@ CScene.prototype.findShade = function(eyeRay, myHit, recursionsLeft)
 
     // vec4.lerp(out, a, b, t) => out = a + t * (b - a);
     // vec4.lerp(colr, colr, colrRec, 0.5);
-    vec4.lerp(colr, colr, colrRec, 0.4);
+    vec4.lerp(colr, colr, colrRec, 0.5);
 
     return colr;
 }
