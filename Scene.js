@@ -500,6 +500,61 @@ CScene.prototype.initScene = function(num)
             // this.item[iNow].rayRotate(-0.5, 1,0,0);
             break;
 
+        case 4:
+            // Ground Plane
+            this.item.push(new CGeom(GeomShape.GroundPlane));
+            iNow = this.item.length -1;
+            this.item[iNow].setIdent();
+            this.item[iNow].rayTranslate(0.0, 0.0, 0.0);
+
+            // Sphere 1
+            this.item.push(new CGeom(GeomShape.Sphere));
+            iNow = this.item.length -1;
+            // move around
+            this.item[iNow].setIdent();
+            this.item[iNow].rayTranslate(2.2, 0.2, 1.0);
+            this.item[iNow].rayScale(1.0, 0.2, 1.0);
+            this.item[iNow].lineColor = vec4.fromValues(0.0,0.3,1.0,1.0);
+            // set material
+            this.item[iNow].material1.setMatl(Materials.RedPlastic);
+            this.item[iNow].material1.setMatl(Materials.Brass);
+            
+            // // Sphere 2
+            this.item.push(new CGeom(GeomShape.Sphere));
+            iNow = this.item.length -1;
+            // move around
+            this.item[iNow].setIdent();
+            this.item[iNow].rayTranslate(-2.2, 0.2, 2.0);
+            this.item[iNow].rayScale(1.0, 1.0, 2.0);
+             // this.item[iNow].rayScale(1.0, 1.0, 1.0);
+            this.item[iNow].lineColor = vec4.fromValues(1.0,0.3,0.0,1.0);
+
+            // Sphere 3
+            this.item.push(new CGeom(GeomShape.Sphere));
+            iNow = this.item.length -1;
+            // move around
+            this.item[iNow].setIdent();
+            this.item[iNow].rayTranslate(0.0, 0.2, 2.0);
+            this.item[iNow].rayScale(1.0, 2.0, 2.0);
+            this.item[iNow].lineColor = vec4.fromValues(0.8,0.8,0.0,1.0);
+
+            // Cylinder 1(using SDF)
+            this.item.push(new CGeom(GeomShape.CylinderImplicit));
+            iNow = this.item.length -1;
+            // move around
+            this.item[iNow].setIdent();
+            this.item[iNow].rayTranslate(2.0, 3.0, 1.0);
+            this.item[iNow].rayScale(1.0, 1.0, 2.0);
+
+            // Cylinder 2(using SDF)
+            this.item.push(new CGeom(GeomShape.CylinderImplicit));
+            iNow = this.item.length -1;
+            // move around
+            this.item[iNow].setIdent();
+            this.item[iNow].rayTranslate(-2.0, 5.0, 2.0);
+            this.item[iNow].rayScale(2.0, 1.0, 1.0);
+            break;
+
         default:
             console.log("CScene.initScene(",num,") NOT YET IMPLEMENTED.");
             // init the default scene

@@ -832,6 +832,9 @@ VBObox0.prototype.draw = function()
         case 3:
             this.drawScene3();
             break;
+        case 4:
+            this.drawScene4();
+            break;
         default:
             this.drawScene0();
             break;
@@ -1207,6 +1210,93 @@ VBObox0.prototype.drawScene3 = function()
     // RESTORE current value (needs push-down stack!)
     mat4.copy(this.mvpMat, tmp);
 }
+
+// 3 spheres for multi-reflections
+VBObox0.prototype.drawScene4 = function()
+{
+    var tmp = mat4.create();    
+    mat4.copy(tmp, this.mvpMat); 
+
+    gl.drawArrays(gl.LINES,	0, this.bgnDisk);
+
+    // Draw Model-space objects
+    var tmp = mat4.create();
+    // SAVE current value (needs push-down stack!)
+    mat4.copy(tmp, this.mvpMat);
+
+    // 1) Copy transforms for Sphere 1 in CScene.initScene(0)
+    mat4.copy(this.mvpMat, tmp);
+    mat4.translate(this.mvpMat, this.mvpMat, vec3.fromValues(2.2, 0.2, 1.0));
+    mat4.scale(this.mvpMat, this.mvpMat, vec3.fromValues(1.0, 0.2, 1.0));
+
+    // Send  new 'ModelMat' values to the GPU's 'u_ModelMat1' uniform: 
+    gl.uniformMatrix4fv(this.u_mvpMatLoc, // GPU location of the uniform
+                        false, // use matrix transpose instead?
+                        this.mvpMat);	// send data from Javascript.
+
+    // restore world-space mvpMat values.
+    mat4.copy(this.mvpMat, tmp);
+
+    // select the drawing primitive to draw,
+    // choices: gl.POINTS, gl.LINES, gl.LINE_STRIP, gl.LINE_LOOP, 
+    // gl.TRIANGLES, gl.TRIANGLE_STRIP, ...
+    gl.drawArrays(gl.LINE_STRIP,
+                this.bgnSphere, // location of 1st vertex to draw;
+                this.bgnCube - this.bgnSphere); // How many vertices to draw
+
+    // RESTORE current value (needs push-down stack!)
+    mat4.copy(this.mvpMat, tmp);
+
+    // 2) Copy transforms for Sphere 2 in CScene.initScene(0)
+    // RESTORE current value (needs push-down stack!)
+    mat4.copy(this.mvpMat, tmp);
+    mat4.translate(this.mvpMat, this.mvpMat, vec3.fromValues(-2.2, 0.2, 2.0));
+    mat4.scale(this.mvpMat, this.mvpMat, vec3.fromValues(1.0, 1.0, 2.0));
+
+    // Send  new 'ModelMat' values to the GPU's 'u_ModelMat1' uniform: 
+    gl.uniformMatrix4fv(this.u_mvpMatLoc, // GPU location of the uniform
+                        false, // use matrix transpose instead?
+                        this.mvpMat);	// send data from Javascript.
+
+    // restore world-space mvpMat values.
+    mat4.copy(this.mvpMat, tmp);
+
+    // select the drawing primitive to draw,
+    // choices: gl.POINTS, gl.LINES, gl.LINE_STRIP, gl.LINE_LOOP, 
+    // gl.TRIANGLES, gl.TRIANGLE_STRIP, ...
+    gl.drawArrays(gl.LINE_STRIP,
+                this.bgnSphere, // location of 1st vertex to draw;
+                this.bgnCube - this.bgnSphere); // How many vertices to draw
+
+    // RESTORE current value (needs push-down stack!)
+    mat4.copy(this.mvpMat, tmp);
+
+
+    // 3) Copy transforms for Sphere 2 in CScene.initScene(0)
+    // RESTORE current value (needs push-down stack!)
+    mat4.copy(this.mvpMat, tmp);
+    mat4.translate(this.mvpMat, this.mvpMat, vec3.fromValues(0.0, 0.2, 2.0));
+    mat4.scale(this.mvpMat, this.mvpMat, vec3.fromValues(1.0, 2.0, 2.0));
+
+    // Send  new 'ModelMat' values to the GPU's 'u_ModelMat1' uniform: 
+    gl.uniformMatrix4fv(this.u_mvpMatLoc, // GPU location of the uniform
+                        false, // use matrix transpose instead?
+                        this.mvpMat);	// send data from Javascript.
+
+    // restore world-space mvpMat values.
+    mat4.copy(this.mvpMat, tmp);
+
+    // select the drawing primitive to draw,
+    // choices: gl.POINTS, gl.LINES, gl.LINE_STRIP, gl.LINE_LOOP, 
+    // gl.TRIANGLES, gl.TRIANGLE_STRIP, ...
+    gl.drawArrays(gl.LINE_STRIP,
+                this.bgnSphere, // location of 1st vertex to draw;
+                this.bgnCube - this.bgnSphere); // How many vertices to draw
+
+    // RESTORE current value (needs push-down stack!)
+    mat4.copy(this.mvpMat, tmp);
+}
+
 
 VBObox0.prototype.reload = function() {
 //=============================================================================

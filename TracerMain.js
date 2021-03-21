@@ -50,7 +50,7 @@ var g_myScene = new CScene();
 // scene-selector number; 0,1,2,... G_SCENE_MAX-1
 var g_SceneNum = 0;
 // Number of scenes defined.
-var G_SCENE_MAX = 3;
+var G_SCENE_MAX = 4;
 
 // Antialiasing setting: 1 == NO antialiasing at all. 
 // 2,3,4... == supersamples: 2x2, 3x3, 4x4, ...
