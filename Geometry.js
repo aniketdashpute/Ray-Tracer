@@ -25,10 +25,18 @@ const GeomShape = {
     Blobby: 6,
     // Implicit sphere
     SphereImplicit: 7,
-    // Implicit square
-    SquareImplicit: 8,
+    // Implicit cube
+    CubeImplicit: 8,
     // Implicit cylinder,
     CylinderImplicit: 9,
+    // Implicit torus
+    TorusImplicit: 11,
+    // Sphere with a hole in it
+    HoledSphereImplicit: 12,
+    // Union exotica,
+    UnionImpplicit: 12,
+    // Intersesction exotica,
+    IntersectionImplicit: 13,
 }
 
 function CGeom(shapeSelect)
@@ -132,6 +140,11 @@ function CGeom(shapeSelect)
             this.material2.setMatl(Materials.SilverShiny);
             break;
         case GeomShape.CylinderImplicit:
+            //set the ray-tracing function (so we call it using item[i].traceMe() )
+            this.traceMe = function(inR,hit,bIsShadowRay) { return this.SphereTrace(inR,hit, bIsShadowRay); }; 
+            this.lineColor = vec4.fromValues(0.5,0.5,0.5,1.0);
+            break;
+        case GeomShape.CubeImplicit:
             //set the ray-tracing function (so we call it using item[i].traceMe() )
             this.traceMe = function(inR,hit,bIsShadowRay) { return this.SphereTrace(inR,hit, bIsShadowRay); }; 
             this.lineColor = vec4.fromValues(0.5,0.5,0.5,1.0);
@@ -695,6 +708,8 @@ CGeom.prototype.SphereTrace = function(inRay, myHit, bIsShadowRay)
             case GeomShape.CylinderImplicit:
                 d = this.getCylinderSDF(currPt, normDir);
                 break;
+            case GeomShape.CubeImplicit:
+                d = this.getCubeSDF(currPt, normDir);
             default:
                 break;
         }
@@ -732,12 +747,13 @@ CGeom.prototype.SphereTrace = function(inRay, myHit, bIsShadowRay)
             // normal to sphere is the line from its origin to the point of intersection on surface
             // but we need to TRANSFORM the normal to world-space, & re-normalize it.
             vec4.subtract(myHit.surfNorm, myHit.modelHitPt, vec4.fromValues(0.0,0.0,0.0,1.0));
-            if (this.shapeType == GeomShape.CylinderImplicit)
+            if (this.shapeType == GeomShape.CylinderImplicit ||
+                this.shapeType == GeomShape.CubeImplicit)
             {
                 vec4.copy(myHit.surfNorm, normDir);
             }
             //mat4.transpose(this.normal2worldPost, this.normal2world);
-            vec4.transformMat4(myHit.surfNorm, myHit.surfNorm, this.normal2worldPost);
+            //vec4.transformMat4(myHit.surfNorm, myHit.surfNorm, this.normal2worldPost);
             vec4.normalize(myHit.surfNorm, myHit.surfNorm);
             
             // TEMPORARY: sphere color-setting
@@ -791,7 +807,7 @@ CGeom.prototype.getCylinderSDF = function(fromPoint, normDir)
 
     // distance from axis
     // vec2.length(xyzw) -> sqrt(x^2 + y^2)
-    f1 = vec2.length(fromPoint) - 1.0;
+    f1 = vec2.length(fromPoint) - 0.5;
 
     // distance from end 1 (z = 1.0)
     f2 = fromPoint[2] - 1.0;
@@ -817,5 +833,54 @@ CGeom.prototype.getCylinderSDF = function(fromPoint, normDir)
     else
     {
         return Math.sqrt(f*f + f1*f1);
+    }
+}
+
+CGeom.prototype.getCubeSDF = function(fromPoint, normDir)
+{
+    // let us first transfer the fromPoint to +ve 1st Quadrant
+    fromPoint[0] = Math.abs(fromPoint[0]);
+    fromPoint[1] = Math.abs(fromPoint[1]);
+    fromPoint[2] = Math.abs(fromPoint[2]);
+    fromPoint[3] = Math.abs(fromPoint[3]);
+
+    // take the difference vector from the corner
+    var vCorner = vec4.fromValues(1.0, 1.0, 1.0, 1.0);
+    var vDiff = vec4.create();
+    vec4.subtract(vDiff, fromPoint, vCorner);
+
+    var vDiff2 = vec4.create();
+    vec4.max(vDiff2, vDiff, vec4.fromValues(0,0,0,0));
+
+    // var nearestDist = Math.max(vDiff[0], Math.max(vDiff[1], vDiff[2]));
+    // nearestDist = Math.min(nearestDist, 0.0);
+
+    // vec4.max(vDiff, vDiff, vec4.fromValues(0,0,0,0));
+    // nearestDist += vec3.length(vDiff);
+
+    var len = vec3.length(vDiff2);
+    if (len > 0)
+    {
+        /*var largestDiff = 1E10;
+        if (vDiff2[0] >0 && vDiff2[0]<largestDiff)
+        {
+            largestDiff = vDiff2[0];
+            vec4.copy(normDir, vec4.fromValues(1.0, 0.0, 0.0, 1.0));
+        }
+        if (vDiff2[1] >0 && vDiff2[1]<largestDiff)
+        {
+            largestDiff = vDiff2[1];
+            vec4.copy(normDir, vec4.fromValues(0.0, 1.0, 0.0, 1.0));
+        }
+        if (vDiff2[2] >0 && vDiff2[2]<largestDiff)
+        {
+            largestDiff = vDiff2[2];
+            vec4.copy(normDir, vec4.fromValues(0.0, 0.0, 1.0, 1.0));
+        }*/
+        return len;
+    }
+    else
+    {
+        return vec3.length(vDiff);
     }
 }
