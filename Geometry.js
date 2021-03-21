@@ -30,11 +30,11 @@ const GeomShape = {
     // Implicit cylinder,
     CylinderImplicit: 9,
     // Implicit torus
-    TorusImplicit: 11,
+    TorusImplicit: 10,
     // Sphere with a hole in it
-    HoledSphereImplicit: 12,
+    HoledSphereImplicit: 11,
     // Union exotica,
-    UnionImpplicit: 12,
+    UnionImplicit: 12,
     // Intersesction exotica,
     IntersectionImplicit: 13,
 }
@@ -107,6 +107,9 @@ function CGeom(shapeSelect)
             this.material2.setMatl(Materials.BluePlastic);
             break;
         case GeomShape.Sphere:
+            // line-to-line spacing
+            this.xgap = 0.5;
+            this.ygap = 1.0;
             //set the ray-tracing function (so we call it using item[i].traceMe() )
             this.traceMe = function(inR,hit,bIsShadowRay) { return this.traceSphere(inR,hit, bIsShadowRay); }; 
             // RGBA blue(A==opacity)
@@ -137,7 +140,7 @@ function CGeom(shapeSelect)
             this.lineColor = vec4.fromValues(1.0,0.0,0.0,1.0);
             // Set some Material property
             this.material1.setMatl(Materials.GoldShiny);
-            this.material2.setMatl(Materials.SilverShiny);
+            this.material2.setMatl(Materials.GoldShiny);
             break;
         case GeomShape.CylinderImplicit:
             //set the ray-tracing function (so we call it using item[i].traceMe() )
@@ -149,6 +152,16 @@ function CGeom(shapeSelect)
             this.traceMe = function(inR,hit,bIsShadowRay) { return this.SphereTrace(inR,hit, bIsShadowRay); }; 
             this.lineColor = vec4.fromValues(0.5,0.5,0.5,1.0);
             break;
+        case GeomShape.HoledSphereImplicit:
+            //set the ray-tracing function (so we call it using item[i].traceMe() )
+            this.traceMe = function(inR,hit,bIsShadowRay) { return this.SphereTrace(inR,hit, bIsShadowRay); }; 
+            this.lineColor = vec4.fromValues(0.5,0.5,0.5,1.0);
+            break;
+        case GeomShape.UnionImplicit:
+            //set the ray-tracing function (so we call it using item[i].traceMe() )
+            this.traceMe = function(inR,hit,bIsShadowRay) { return this.SphereTrace(inR,hit, bIsShadowRay); }; 
+            this.lineColor = vec4.fromValues(0.5,0.5,0.5,1.0);
+            break;            
         default:
             console.log("CGeom() constructor: ERROR! INVALID shapeSelect:", shapeSelect);
             return;
@@ -625,10 +638,22 @@ CGeom.prototype.traceSphere = function(inRay, myHit, bIsShadowRay)
     vec4.subtract(myHit.surfNorm, myHit.modelHitPt, vec4.fromValues(0.0,0.0,0.0,1.0));
     vec4.transformMat4(myHit.surfNorm, myHit.surfNorm, this.normal2worldPost);
     vec4.normalize(myHit.surfNorm, myHit.surfNorm);
-    
-    // TEMPORARY: sphere color-setting
-    // in CScene.makeRayTracedImage, use 'this.gapColor'
-    myHit.hitNum = 1;
+
+    var x = myHit.modelHitPt[0];
+    var y = myHit.modelHitPt[1];
+    var z = myHit.modelHitPt[2];
+    var tot = Math.floor(x/this.xgap) + Math.floor(y/this.xgap) + Math.floor(z/this.xgap);
+    // if (tot < 0) tot = -tot;
+    if (tot%2 == 0)
+    {
+        myHit.hitNum = 0;
+    }
+    else
+    {
+        // TEMPORARY: sphere color-setting
+        // in CScene.makeRayTracedImage, use 'this.gapColor'
+        myHit.hitNum = 1;
+    }    
 
     /*
     // DIAGNOSTIC
@@ -710,6 +735,13 @@ CGeom.prototype.SphereTrace = function(inRay, myHit, bIsShadowRay)
                 break;
             case GeomShape.CubeImplicit:
                 d = this.getCubeSDF(currPt, normDir);
+                break;
+            case GeomShape.HoledSphereImplicit:
+                d = Math.max(this.getSphereSDF(currPt), -this.getCylinderSDF(currPt, normDir));
+                break;
+            case GeomShape.UnionImplicit:
+                d = Math.min(this.getSphereSDF(currPt), this.getCylinderSDF(currPt, normDir));
+                break;                
             default:
                 break;
         }

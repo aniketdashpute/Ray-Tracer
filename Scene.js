@@ -442,17 +442,13 @@ CScene.prototype.initScene = function(num)
             this.item.push(new CGeom(GeomShape.GroundPlane));
             iNow = this.item.length -1;
 
-            // Cylinder (using SDF)
+            // Cube (using SDF)
             this.item.push(new CGeom(GeomShape.CubeImplicit));
             iNow = this.item.length -1;
             // move around
             this.item[iNow].setIdent();
             this.item[iNow].rayTranslate(0.0, 0.0, 1.0);
             //this.item[iNow].rayScale(1.0, 1.0, 1.0);
-
-            // Ground Plane
-            this.item.push(new CGeom(GeomShape.GroundPlane));
-            iNow = this.item.length -1;
 
             // Cylinder (using SDF)
             this.item.push(new CGeom(GeomShape.CylinderImplicit));
@@ -462,14 +458,21 @@ CScene.prototype.initScene = function(num)
             this.item[iNow].rayTranslate(-2.0, 0.0, 1.0);
             //this.item[iNow].rayScale(1.0, 1.0, 1.0);
 
-            // Disk
-            this.item.push(new CGeom(GeomShape.SphereImplicit));
+            // Holed- Sphere with a hole in it
+            this.item.push(new CGeom(GeomShape.HoledSphereImplicit));
             iNow = this.item.length -1;
             // move around
             this.item[iNow].setIdent();
             this.item[iNow].rayTranslate(1.5, -1.5, 3.0);
             //this.item[iNow].rayScale(1.0, 1.0, 1.0);
             // this.item[iNow].rayRotate(-0.5, 1,0,0);
+
+            // EXotica - Sphere + Cylinder together
+            this.item.push(new CGeom(GeomShape.UnionImplicit));
+            iNow = this.item.length -1;
+            // move around
+            this.item[iNow].setIdent();
+            this.item[iNow].rayTranslate(-2.5, 2.5, 3.0);
             break;
 
         case 3:
@@ -483,7 +486,8 @@ CScene.prototype.initScene = function(num)
             // move around
             this.item[iNow].setIdent();
             this.item[iNow].rayTranslate(0.0, -1.5, 1.0);
-            //this.item[iNow].rayScale(1.0, 1.0, 1.0);
+            this.item[iNow].material1.setMatl(Materials.SilverShiny);
+            this.item[iNow].material2.setMatl(Materials.BluePlastic);
             // this.item[iNow].rayRotate(-0.5, 1,0,0);
 
             // Disk
