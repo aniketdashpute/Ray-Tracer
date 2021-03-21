@@ -66,9 +66,9 @@ function VBObox0()
 // /*
  this.bgnSphere = this.vboVerts;    // remember starting vertex for 'sphere'
  this.appendWireSphere();           // create (default-resolution) sphere
-/* this.bgnCube = this.vboVerts;      // remember starting vertex for 'cube'
- this.appendWireCube();                 // YOU write these!
- this.bgnCyl  = this.vboVerts;      // remember starting vertex for 'cylinder'
+ this.bgnCube = this.vboVerts;      // remember starting vertex for 'cube'
+ this.appendLineCube();             // (see fcn below)
+/* this.bgnCyl  = this.vboVerts;      // remember starting vertex for 'cylinder'
  this.appendWireCylinder();
 // */
 
@@ -277,6 +277,55 @@ var tmp = new Float32Array(this.vboContents.length + vertSet.length);
   tmp.set(vertSet,this.vboContents.length); // copy new vertSet just after it.
   this.vboVerts += vertCount;       // find number of verts in both.
   this.vboContents = tmp;           // REPLACE old vboContents with tmp
+}
+
+VBObox0.prototype.appendLineCube = function() {
+    //==============================================================================
+    // Create a set of vertices to draw grid of colored lines that form a unit
+    // cube,  centered at x=y=z=0, (vertices at +/- 1 coordinates)
+    // THEN append those vertices to this.vboContents array.
+    // Draw these vertices with with gl.GL_LINES primitive.
+    var vertCount = 128;
+    var vertSet = new Float32Array(vertCount * this.floatsPerVertex); 
+
+    var colrNow = vec4.fromValues(1.0, 0.0, 0.0, 1.0);
+    xVal = [-1,  1, -1, -1, -1,  1,  1,  1];
+    yVal = [-1, -1,  1, -1,  1, -1,  1,  1];
+    zVal = [-1, -1, -1,  1,  1,  1, -1,  1];
+    idx=0;
+    for(var k=0; k<8 ;k++)
+    {
+        for (var p=0; p<8; p++)
+        {
+            vertSet[idx  ] = xVal[k];     // x value
+            vertSet[idx+1] = yVal[k];     // y value
+            vertSet[idx+2] = zVal[k];     // z value
+            vertSet[idx+3] = 1.0;         // w;
+            vertSet[idx+4] = colrNow[0];  // r
+            vertSet[idx+5] = colrNow[1];  // g
+            vertSet[idx+6] = colrNow[2];  // b
+            vertSet[idx+7] = colrNow[3];  // a;
+            idx += this.floatsPerVertex;
+
+            vertSet[idx  ] = xVal[p];     // x value
+            vertSet[idx+1] = yVal[p];     // y value
+            vertSet[idx+2] = zVal[p];     // z value
+            vertSet[idx+3] = 1.0;         // w;
+            vertSet[idx+4] = colrNow[0];  // r
+            vertSet[idx+5] = colrNow[1];  // g
+            vertSet[idx+6] = colrNow[2];  // b
+            vertSet[idx+7] = colrNow[3];  // a;
+            idx += this.floatsPerVertex;
+        }
+    }
+
+    // Now APPEND this to existing VBO contents:
+    // Make a new array (local) big enough to hold BOTH vboContents & vertSet:
+    var tmp = new Float32Array(this.vboContents.length + vertSet.length);
+    tmp.set(this.vboContents, 0);     // copy old VBOcontents into tmp, and
+    tmp.set(vertSet,this.vboContents.length); // copy new vertSet just after it.
+    this.vboVerts += vertCount;       // find number of verts in both.
+    this.vboContents = tmp;           // REPLACE old vboContents with tmp
 }
 
 VBObox0.prototype.appendDisk = function(rad) {
@@ -535,21 +584,6 @@ var tmp = new Float32Array(this.vboContents.length + vertSet.length);
   this.vboVerts += vertCount;       // find number of verts in both.
   this.vboContents = tmp;           // REPLACE old vboContents with tmp
 
-}
-
-VBObox0.prototype.appendLineCube = function() {
-//==============================================================================
-// Create a set of vertices to draw grid of colored lines that form a unit
-// cube,  centered at x=y=z=0, (vertices at +/- 1 coordinates)
-// THEN append those vertices to this.vboContents array.
-// Draw these vertices with with gl.GL_LINES primitive.
-
-//
-//
-// 		********   YOU WRITE THIS! ********
-//
-//
-//
 }
 
 VBObox0.prototype.init = function() {
@@ -888,7 +922,7 @@ VBObox0.prototype.drawScene0 = function()
     // gl.TRIANGLES, gl.TRIANGLE_STRIP, ...
     gl.drawArrays(gl.LINE_STRIP,
                 this.bgnSphere, // location of 1st vertex to draw;
-                this.vboVerts - this.bgnSphere); // How many vertices to draw
+                this.bgnCube - this.bgnSphere); // How many vertices to draw
 
     // RESTORE current value (needs push-down stack!)
     mat4.copy(this.mvpMat, tmp);
@@ -913,7 +947,7 @@ VBObox0.prototype.drawScene0 = function()
     // gl.TRIANGLES, gl.TRIANGLE_STRIP, ...
     gl.drawArrays(gl.LINE_STRIP,
                 this.bgnSphere, // location of 1st vertex to draw;
-                this.vboVerts - this.bgnSphere); // How many vertices to draw
+                this.bgnCube - this.bgnSphere); // How many vertices to draw
 
     // RESTORE current value (needs push-down stack!)
     mat4.copy(this.mvpMat, tmp);
@@ -950,7 +984,7 @@ VBObox0.prototype.drawScene1 = function()
     // gl.TRIANGLES, gl.TRIANGLE_STRIP, ...
     gl.drawArrays(gl.LINE_STRIP,
                 this.bgnSphere, // location of 1st vertex to draw;
-                this.vboVerts - this.bgnSphere); // How many vertices to draw
+                this.bgnCube - this.bgnSphere); // How many vertices to draw
 
     // RESTORE current value (needs push-down stack!)
     mat4.copy(this.mvpMat, tmp);
@@ -974,7 +1008,7 @@ VBObox0.prototype.drawScene1 = function()
     // gl.TRIANGLES, gl.TRIANGLE_STRIP, ...
     gl.drawArrays(gl.LINE_STRIP,
                 this.bgnSphere, // location of 1st vertex to draw;
-                this.vboVerts - this.bgnSphere); // How many vertices to draw
+                this.bgnCube - this.bgnSphere); // How many vertices to draw
 
     // RESTORE current value (needs push-down stack!)
     mat4.copy(this.mvpMat, tmp);
@@ -999,7 +1033,7 @@ VBObox0.prototype.drawScene1 = function()
     // gl.TRIANGLES, gl.TRIANGLE_STRIP, ...
     gl.drawArrays(gl.LINE_STRIP,
                 this.bgnSphere, // location of 1st vertex to draw;
-                this.vboVerts - this.bgnSphere); // How many vertices to draw
+                this.bgnCube - this.bgnSphere); // How many vertices to draw
 
     // RESTORE current value (needs push-down stack!)
     mat4.copy(this.mvpMat, tmp);
@@ -1035,8 +1069,8 @@ VBObox0.prototype.drawScene2 = function()
     // choices: gl.POINTS, gl.LINES, gl.LINE_STRIP, gl.LINE_LOOP, 
     // gl.TRIANGLES, gl.TRIANGLE_STRIP, ...
     gl.drawArrays(gl.LINE_STRIP,
-                this.bgnSphere, // location of 1st vertex to draw;
-                this.vboVerts - this.bgnSphere); // How many vertices to draw
+                this.bgnCube, // location of 1st vertex to draw;
+                this.vboVerts - this.bgnCube); // How many vertices to draw
 
     // RESTORE current value (needs push-down stack!)
     mat4.copy(this.mvpMat, tmp);
@@ -1060,7 +1094,7 @@ VBObox0.prototype.drawScene2 = function()
     // gl.TRIANGLES, gl.TRIANGLE_STRIP, ...
     gl.drawArrays(gl.LINE_STRIP,
                 this.bgnSphere, // location of 1st vertex to draw;
-                this.vboVerts - this.bgnSphere); // How many vertices to draw
+                this.bgnCube - this.bgnSphere); // How many vertices to draw
 
     // RESTORE current value (needs push-down stack!)
     mat4.copy(this.mvpMat, tmp);
@@ -1097,7 +1131,7 @@ VBObox0.prototype.drawScene3 = function()
     // gl.TRIANGLES, gl.TRIANGLE_STRIP, ...
     gl.drawArrays(gl.LINE_STRIP,
                 this.bgnSphere, // location of 1st vertex to draw;
-                this.vboVerts - this.bgnSphere); // How many vertices to draw
+                this.bgnCube - this.bgnSphere); // How many vertices to draw
 
     // RESTORE current value (needs push-down stack!)
     mat4.copy(this.mvpMat, tmp);

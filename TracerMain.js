@@ -114,7 +114,7 @@ function main()
     // make our initial ray-traced image automatically:
 
     // run the ray-tracer
-    g_myScene.makeRayTracedImage();
+    //g_myScene.makeRayTracedImage();
     // be sure OUR VBO & shaders are in use, then
     rayView.switchToMe();
     // re-transfer VBO contents and texture-map contents

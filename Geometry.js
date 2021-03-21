@@ -791,7 +791,7 @@ CGeom.prototype.getCylinderSDF = function(fromPoint, normDir)
 
     // distance from axis
     // vec2.length(xyzw) -> sqrt(x^2 + y^2)
-    f1 = vec2.length(fromPoint) - 0.5;
+    f1 = vec2.length(fromPoint) - 1.0;
 
     // distance from end 1 (z = 1.0)
     f2 = fromPoint[2] - 1.0;

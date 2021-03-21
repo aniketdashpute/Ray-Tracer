@@ -440,14 +440,14 @@ CScene.prototype.initScene = function(num)
             this.item.push(new CGeom(GeomShape.GroundPlane));
             iNow = this.item.length -1;
 
-            // // Cylinder (using SDF)
-            // this.item.push(new CGeom(GeomShape.CylinderImplicit));
-            // iNow = this.item.length -1;
-            // // move around
-            // this.item[iNow].setIdent();
-            // this.item[iNow].rayTranslate(0.0, -1.5, 1.0);
-            // //this.item[iNow].rayScale(1.0, 1.0, 1.0);
-            // // this.item[iNow].rayRotate(-0.5, 1,0,0);
+            // Cylinder (using SDF)
+            this.item.push(new CGeom(GeomShape.CylinderImplicit));
+            iNow = this.item.length -1;
+            // move around
+            this.item[iNow].setIdent();
+            this.item[iNow].rayTranslate(0.0, -1.5, 1.0);
+            //this.item[iNow].rayScale(1.0, 1.0, 1.0);
+            // this.item[iNow].rayRotate(-0.5, 1,0,0);
 
             // Disk
             this.item.push(new CGeom(GeomShape.SphereImplicit));
