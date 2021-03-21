@@ -353,55 +353,7 @@ CScene.prototype.initScene = function(num)
     // set up new scene:
     switch(num)
     {
-        case 3:
-            // Ground Plane
-            this.item.push(new CGeom(GeomShape.GroundPlane));
-            iNow = this.item.length -1;
-
-            // Cylinder (using SDF)
-            this.item.push(new CGeom(GeomShape.CylinderImplicit));
-            iNow = this.item.length -1;
-            // move around
-            this.item[iNow].setIdent();
-            this.item[iNow].rayTranslate(0.0, -1.5, 1.0);
-            //this.item[iNow].rayScale(1.0, 1.0, 1.0);
-            // this.item[iNow].rayRotate(-0.5, 1,0,0);
-
-            // Disk
-            this.item.push(new CGeom(GeomShape.SphereImplicit));
-            iNow = this.item.length -1;
-            // move around
-            this.item[iNow].setIdent();
-            this.item[iNow].rayTranslate(1.5, -1.5, 3.0);
-            //this.item[iNow].rayScale(1.0, 1.0, 1.0);
-            // this.item[iNow].rayRotate(-0.5, 1,0,0);
-            break;
-
-        case 2:
-            // Ground Plane
-            this.item.push(new CGeom(GeomShape.GroundPlane));
-            iNow = this.item.length -1;
-
-            // Sphere 2 (using SDF)
-            this.item.push(new CGeom(GeomShape.Sphere));
-            iNow = this.item.length -1;
-            // move around
-            this.item[iNow].setIdent();
-            this.item[iNow].rayTranslate(0.0, -1.5, 1.0);
-            //this.item[iNow].rayScale(1.0, 1.0, 1.0);
-            // this.item[iNow].rayRotate(-0.5, 1,0,0);
-
-            // Disk
-            this.item.push(new CGeom(GeomShape.Disk));
-            iNow = this.item.length -1;
-            // move around
-            this.item[iNow].setIdent();
-            this.item[iNow].rayTranslate(0.0, -1.5, 3.0);
-            //this.item[iNow].rayScale(1.0, 1.0, 1.0);
-            // this.item[iNow].rayRotate(-0.5, 1,0,0);
-            break;
-
-        case 1:
+        case 0:
             // Ground Plane
             this.item.push(new CGeom(GeomShape.GroundPlane));
             iNow = this.item.length -1;
@@ -437,9 +389,17 @@ CScene.prototype.initScene = function(num)
             this.item[iNow].setIdent();
             this.item[iNow].rayTranslate(3.0, -2.0, 2.0);
             this.item[iNow].rayScale(1.0, 1.0, 2.0);
+
+            // Sphere 2
+            this.item.push(new CGeom(GeomShape.Sphere));
+            iNow = this.item.length -1;
+            // move around
+            this.item[iNow].setIdent();
+            this.item[iNow].rayTranslate(-3.0, -2.0, 2.0);
+            this.item[iNow].rayScale(1.0, 1.0, 1.0);
             break;
 
-        case 0: // 3 sphere - Multi Reflection Scene
+        case 1: // 3 sphere - Multi Reflection Scene
             // Ground Plane
             this.item.push(new CGeom(GeomShape.GroundPlane));
             iNow = this.item.length -1;
@@ -472,6 +432,55 @@ CScene.prototype.initScene = function(num)
             this.item[iNow].rayTranslate(0.0, 0.2, 1.0);
             this.item[iNow].rayScale(1.0, 1.0, 1.0);
             this.item[iNow].lineColor = vec4.fromValues(0.8,0.8,0.0,1.0);
+            break;
+
+
+        case 2:
+            // Ground Plane
+            this.item.push(new CGeom(GeomShape.GroundPlane));
+            iNow = this.item.length -1;
+
+            // // Cylinder (using SDF)
+            // this.item.push(new CGeom(GeomShape.CylinderImplicit));
+            // iNow = this.item.length -1;
+            // // move around
+            // this.item[iNow].setIdent();
+            // this.item[iNow].rayTranslate(0.0, -1.5, 1.0);
+            // //this.item[iNow].rayScale(1.0, 1.0, 1.0);
+            // // this.item[iNow].rayRotate(-0.5, 1,0,0);
+
+            // Disk
+            this.item.push(new CGeom(GeomShape.SphereImplicit));
+            iNow = this.item.length -1;
+            // move around
+            this.item[iNow].setIdent();
+            this.item[iNow].rayTranslate(1.5, -1.5, 3.0);
+            //this.item[iNow].rayScale(1.0, 1.0, 1.0);
+            // this.item[iNow].rayRotate(-0.5, 1,0,0);
+            break;
+
+        case 3:
+            // Ground Plane
+            this.item.push(new CGeom(GeomShape.GroundPlane));
+            iNow = this.item.length -1;
+
+            // Sphere 2 (using SDF)
+            this.item.push(new CGeom(GeomShape.Sphere));
+            iNow = this.item.length -1;
+            // move around
+            this.item[iNow].setIdent();
+            this.item[iNow].rayTranslate(0.0, -1.5, 1.0);
+            //this.item[iNow].rayScale(1.0, 1.0, 1.0);
+            // this.item[iNow].rayRotate(-0.5, 1,0,0);
+
+            // Disk
+            this.item.push(new CGeom(GeomShape.Disk));
+            iNow = this.item.length -1;
+            // move around
+            this.item[iNow].setIdent();
+            this.item[iNow].rayTranslate(0.0, -1.5, 3.0);
+            //this.item[iNow].rayScale(1.0, 1.0, 1.0);
+            // this.item[iNow].rayRotate(-0.5, 1,0,0);
             break;
 
         default:

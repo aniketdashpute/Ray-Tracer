@@ -772,6 +772,7 @@ VBObox0.prototype.adjust = function() {
  * @function draw()
  * @description Mimic the transformations from RayTracer Scene
  * and draw the LEfthand window - WebGL scene for browsing
+ * Use g_SceneNum to choose the scene configuration
  */
 VBObox0.prototype.draw = function()
 {
@@ -782,6 +783,30 @@ VBObox0.prototype.draw = function()
                 '.draw() call you needed to call this.switchToMe()!!');
     }
 
+    // set up new scene:
+    switch(g_SceneNum)
+    {
+        case 0:
+            this.drawScene0();
+            break;
+        case 1:
+            this.drawScene1();
+            break;
+        case 2:
+            this.drawScene2();
+            break;
+        case 3:
+            this.drawScene3();
+            break;
+        default:
+            this.drawScene0();
+            break;
+    }
+
+}
+
+VBObox0.prototype.drawScene0 = function()
+{
     // Draw the contents of the currently-bound VBO:
     // SPLIT UP the drawing into separate shapes, as each needs different
     // transforms in its mvpMatrix uniform.  VBObox0.adjust() already set value
@@ -889,6 +914,214 @@ VBObox0.prototype.draw = function()
     gl.drawArrays(gl.LINE_STRIP,
                 this.bgnSphere, // location of 1st vertex to draw;
                 this.vboVerts - this.bgnSphere); // How many vertices to draw
+
+    // RESTORE current value (needs push-down stack!)
+    mat4.copy(this.mvpMat, tmp);
+}
+
+// 3 spheres for multi-reflections
+VBObox0.prototype.drawScene1 = function()
+{
+    var tmp = mat4.create();    
+    mat4.copy(tmp, this.mvpMat); 
+
+    gl.drawArrays(gl.LINES,	0, this.bgnDisk);
+
+    // Draw Model-space objects
+    var tmp = mat4.create();
+    // SAVE current value (needs push-down stack!)
+    mat4.copy(tmp, this.mvpMat);
+
+    // 1) Copy transforms for Sphere 1 in CScene.initScene(0)
+    mat4.copy(this.mvpMat, tmp);
+    mat4.translate(this.mvpMat, this.mvpMat, vec3.fromValues(2.2, 0.2, 1.0));
+    mat4.scale(this.mvpMat, this.mvpMat, vec3.fromValues(1.0, 1.0, 1.0));
+
+    // Send  new 'ModelMat' values to the GPU's 'u_ModelMat1' uniform: 
+    gl.uniformMatrix4fv(this.u_mvpMatLoc, // GPU location of the uniform
+                        false, // use matrix transpose instead?
+                        this.mvpMat);	// send data from Javascript.
+
+    // restore world-space mvpMat values.
+    mat4.copy(this.mvpMat, tmp);
+
+    // select the drawing primitive to draw,
+    // choices: gl.POINTS, gl.LINES, gl.LINE_STRIP, gl.LINE_LOOP, 
+    // gl.TRIANGLES, gl.TRIANGLE_STRIP, ...
+    gl.drawArrays(gl.LINE_STRIP,
+                this.bgnSphere, // location of 1st vertex to draw;
+                this.vboVerts - this.bgnSphere); // How many vertices to draw
+
+    // RESTORE current value (needs push-down stack!)
+    mat4.copy(this.mvpMat, tmp);
+
+    // 2) Copy transforms for Sphere 2 in CScene.initScene(0)
+    // RESTORE current value (needs push-down stack!)
+    mat4.copy(this.mvpMat, tmp);
+    mat4.translate(this.mvpMat, this.mvpMat, vec3.fromValues(-2.2, 0.2, 1.0));
+    mat4.scale(this.mvpMat, this.mvpMat, vec3.fromValues(1.0, 1.0, 1.0));
+
+    // Send  new 'ModelMat' values to the GPU's 'u_ModelMat1' uniform: 
+    gl.uniformMatrix4fv(this.u_mvpMatLoc, // GPU location of the uniform
+                        false, // use matrix transpose instead?
+                        this.mvpMat);	// send data from Javascript.
+
+    // restore world-space mvpMat values.
+    mat4.copy(this.mvpMat, tmp);
+
+    // select the drawing primitive to draw,
+    // choices: gl.POINTS, gl.LINES, gl.LINE_STRIP, gl.LINE_LOOP, 
+    // gl.TRIANGLES, gl.TRIANGLE_STRIP, ...
+    gl.drawArrays(gl.LINE_STRIP,
+                this.bgnSphere, // location of 1st vertex to draw;
+                this.vboVerts - this.bgnSphere); // How many vertices to draw
+
+    // RESTORE current value (needs push-down stack!)
+    mat4.copy(this.mvpMat, tmp);
+
+
+    // 3) Copy transforms for Sphere 2 in CScene.initScene(0)
+    // RESTORE current value (needs push-down stack!)
+    mat4.copy(this.mvpMat, tmp);
+    mat4.translate(this.mvpMat, this.mvpMat, vec3.fromValues(0.0, 0.2, 1.0));
+    mat4.scale(this.mvpMat, this.mvpMat, vec3.fromValues(1.0, 1.0, 1.0));
+
+    // Send  new 'ModelMat' values to the GPU's 'u_ModelMat1' uniform: 
+    gl.uniformMatrix4fv(this.u_mvpMatLoc, // GPU location of the uniform
+                        false, // use matrix transpose instead?
+                        this.mvpMat);	// send data from Javascript.
+
+    // restore world-space mvpMat values.
+    mat4.copy(this.mvpMat, tmp);
+
+    // select the drawing primitive to draw,
+    // choices: gl.POINTS, gl.LINES, gl.LINE_STRIP, gl.LINE_LOOP, 
+    // gl.TRIANGLES, gl.TRIANGLE_STRIP, ...
+    gl.drawArrays(gl.LINE_STRIP,
+                this.bgnSphere, // location of 1st vertex to draw;
+                this.vboVerts - this.bgnSphere); // How many vertices to draw
+
+    // RESTORE current value (needs push-down stack!)
+    mat4.copy(this.mvpMat, tmp);
+}
+
+// Sphere + Cylinder + SuperQuadratics(?)
+VBObox0.prototype.drawScene2 = function()
+{
+    var tmp = mat4.create();    
+    mat4.copy(tmp, this.mvpMat); 
+
+    gl.drawArrays(gl.LINES,	0, this.bgnDisk);
+
+    // Draw Model-space objects
+    var tmp = mat4.create();
+    // SAVE current value (needs push-down stack!)
+    mat4.copy(tmp, this.mvpMat);
+
+    // 1) Copy transforms for Sphere 1 in CScene.initScene(0)
+    mat4.copy(this.mvpMat, tmp);
+    mat4.translate(this.mvpMat, this.mvpMat, vec3.fromValues(0.0, -1.5, 1.0));
+    mat4.scale(this.mvpMat, this.mvpMat, vec3.fromValues(1.0, 1.0, 1.0));
+
+    // Send  new 'ModelMat' values to the GPU's 'u_ModelMat1' uniform: 
+    gl.uniformMatrix4fv(this.u_mvpMatLoc, // GPU location of the uniform
+                        false, // use matrix transpose instead?
+                        this.mvpMat);	// send data from Javascript.
+
+    // restore world-space mvpMat values.
+    mat4.copy(this.mvpMat, tmp);
+
+    // select the drawing primitive to draw,
+    // choices: gl.POINTS, gl.LINES, gl.LINE_STRIP, gl.LINE_LOOP, 
+    // gl.TRIANGLES, gl.TRIANGLE_STRIP, ...
+    gl.drawArrays(gl.LINE_STRIP,
+                this.bgnSphere, // location of 1st vertex to draw;
+                this.vboVerts - this.bgnSphere); // How many vertices to draw
+
+    // RESTORE current value (needs push-down stack!)
+    mat4.copy(this.mvpMat, tmp);
+
+    // 2) Copy transforms for Sphere 2 in CScene.initScene(0)
+    // RESTORE current value (needs push-down stack!)
+    mat4.copy(this.mvpMat, tmp);
+    mat4.translate(this.mvpMat, this.mvpMat, vec3.fromValues(1.5, -1.5, 3.0));
+    mat4.scale(this.mvpMat, this.mvpMat, vec3.fromValues(1.0, 1.0, 1.0));
+
+    // Send  new 'ModelMat' values to the GPU's 'u_ModelMat1' uniform: 
+    gl.uniformMatrix4fv(this.u_mvpMatLoc, // GPU location of the uniform
+                        false, // use matrix transpose instead?
+                        this.mvpMat);	// send data from Javascript.
+
+    // restore world-space mvpMat values.
+    mat4.copy(this.mvpMat, tmp);
+
+    // select the drawing primitive to draw,
+    // choices: gl.POINTS, gl.LINES, gl.LINE_STRIP, gl.LINE_LOOP, 
+    // gl.TRIANGLES, gl.TRIANGLE_STRIP, ...
+    gl.drawArrays(gl.LINE_STRIP,
+                this.bgnSphere, // location of 1st vertex to draw;
+                this.vboVerts - this.bgnSphere); // How many vertices to draw
+
+    // RESTORE current value (needs push-down stack!)
+    mat4.copy(this.mvpMat, tmp);
+}
+
+// Sphere + Disk + Cube(?)
+VBObox0.prototype.drawScene3 = function()
+{
+    var tmp = mat4.create();    
+    mat4.copy(tmp, this.mvpMat); 
+
+    gl.drawArrays(gl.LINES,	0, this.bgnDisk);
+
+    // Draw Model-space objects
+    var tmp = mat4.create();
+    // SAVE current value (needs push-down stack!)
+    mat4.copy(tmp, this.mvpMat);
+
+    // 1) Copy transforms for Sphere 1 in CScene.initScene(0)
+    mat4.copy(this.mvpMat, tmp);
+    mat4.translate(this.mvpMat, this.mvpMat, vec3.fromValues(0.0, -1.5, 1.0));
+    mat4.scale(this.mvpMat, this.mvpMat, vec3.fromValues(1.0, 1.0, 1.0));
+
+    // Send  new 'ModelMat' values to the GPU's 'u_ModelMat1' uniform: 
+    gl.uniformMatrix4fv(this.u_mvpMatLoc, // GPU location of the uniform
+                        false, // use matrix transpose instead?
+                        this.mvpMat);	// send data from Javascript.
+
+    // restore world-space mvpMat values.
+    mat4.copy(this.mvpMat, tmp);
+
+    // select the drawing primitive to draw,
+    // choices: gl.POINTS, gl.LINES, gl.LINE_STRIP, gl.LINE_LOOP, 
+    // gl.TRIANGLES, gl.TRIANGLE_STRIP, ...
+    gl.drawArrays(gl.LINE_STRIP,
+                this.bgnSphere, // location of 1st vertex to draw;
+                this.vboVerts - this.bgnSphere); // How many vertices to draw
+
+    // RESTORE current value (needs push-down stack!)
+    mat4.copy(this.mvpMat, tmp);
+
+    // 2) Copy transforms for Disk 1 in CScene.initScene(0)
+    // RESTORE current value (needs push-down stack!)
+    mat4.copy(this.mvpMat, tmp);
+    mat4.translate(this.mvpMat, this.mvpMat, vec3.fromValues(0.0, -1.5, 3.0));
+    mat4.scale(this.mvpMat, this.mvpMat, vec3.fromValues(1.0, 1.0, 1.0));
+
+    // Send  new 'ModelMat' values to the GPU's 'u_ModelMat1' uniform: 
+    gl.uniformMatrix4fv(this.u_mvpMatLoc, // GPU location of the uniform
+                        false, // use matrix transpose instead?
+                        this.mvpMat);	// send data from Javascript.
+
+    // restore world-space mvpMat values.
+    mat4.copy(this.mvpMat, tmp);
+
+    // select the drawing primitive to draw,
+    // choices: gl.POINTS, gl.LINES, gl.LINE_STRIP, gl.LINE_LOOP, 
+    // gl.TRIANGLES, gl.TRIANGLE_STRIP, ...
+    gl.drawArrays(gl.LINES,
+                this.bgnDisk, // location of 1st vertex to draw;
+                this.bgnSphere - this.bgnDisk); // How many vertices to draw
 
     // RESTORE current value (needs push-down stack!)
     mat4.copy(this.mvpMat, tmp);
