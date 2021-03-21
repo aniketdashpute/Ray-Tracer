@@ -70,7 +70,7 @@ var g_Light2 = 1;
 var g_Light1Pos = vec4.fromValues(15.0, 15.0, 10.0, 1.0);
 var g_Light2Pos = vec4.fromValues(0.0, -15.0, 15.0, 1.0);
 
-var g_ReflectionBounces = 3;
+var g_ReflectionBounces = 2;
 
 function main()
 {

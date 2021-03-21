@@ -247,7 +247,7 @@ function CScene()
     // safety margin of 20:1 for small # calcs)                                    
     this.RAY_EPSILON = 1.0E-15;
 
-    this.epsilon = 1.0E-5;
+    this.epsilon = 1.0E-3;
     
     this.imgBuf = g_myPic;
     // DEFAULT output image buffer
@@ -695,7 +695,7 @@ CScene.prototype.findShade = function(eyeRay, myHit, recursionsLeft)
         {
             // C_diff = material.color * light.color * Lambertian * lightpower/distance
             vec4.multiply(colrDiff, this.lights[k].color, colrDiff);
-            vec4.scale(colrDiff, colrDiff, colrDiffMag * this.lights[k].power/(sLightDist + this.epsilon));
+            vec4.scale(colrDiff, colrDiff, colrDiffMag * this.lights[k].power/(sLightDist));
             vec4.scaleAndAdd(colr, colr, colrDiff, 1.0);
 
             // add specular lighting:
@@ -711,7 +711,7 @@ CScene.prototype.findShade = function(eyeRay, myHit, recursionsLeft)
 
             // C_spec = material.spec_color * light.color * specMag * lightpower/distance
             vec4.multiply(colrSpec, this.lights[k].color, colrSpec);
-            vec4.scale(colrSpec, colrSpec, specMag * this.lights[k].power/(sLightDist + this.epsilon));
+            vec4.scale(colrSpec, colrSpec, specMag * this.lights[k].power/(sLightDist));
             vec4.scaleAndAdd(colr, colr, colrSpec, 1.0);
             //if (specMag > 0){}
         }
@@ -746,7 +746,7 @@ CScene.prototype.findShade = function(eyeRay, myHit, recursionsLeft)
     var vSource = myHit.hitPt;
 
     // scale and add an epsilon
-    // vec4.scaleAndAdd(vSource, vSource, eyeRay.dir, -this.epsilon);
+    vec4.scaleAndAdd(vSource, vSource, eyeRay.dir, -this.epsilon);
 
     // generate the eye Ray
     this.rayCam.setEyeRaySourceInDir(this.eyeRay2, vSource, vDir);
